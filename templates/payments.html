@@ -2,6 +2,116 @@
 
 {% block title %}Payments & Transactions — {{ booking.booking_code }} — RETREAT Hotel & Suites{% endblock %}
 
+{% block extra_css %}
+<style>
+.payment-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  align-items: stretch;
+}
+@media (max-width: 860px) {
+  .payment-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+.payment-card {
+  background: #ffffff;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  padding: 28px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+}
+.payment-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+  box-sizing: border-box;
+}
+.payment-form-group:last-of-type {
+  margin-bottom: 24px;
+}
+.payment-label {
+  display: block;
+  font-family: var(--font-interface);
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-forest-muted);
+  margin: 0;
+}
+.payment-input,
+.payment-select {
+  width: 100%;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  padding: 0 14px;
+  font-size: 13.5px;
+  font-family: var(--font-body);
+  color: var(--color-text-dark);
+  background: #ffffff;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.payment-input:focus,
+.payment-select:focus {
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 2px rgba(197, 168, 128, 0.2);
+}
+.payment-type-option {
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.2s ease;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+.payment-type-option.active {
+  border-color: var(--color-gold);
+  background: rgba(197, 168, 128, 0.08);
+}
+.payment-history-item {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  background: #fafaf8;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+.payment-history-item:hover {
+  border-color: rgba(27, 61, 47, 0.2);
+}
+.txn-badge {
+  font-family: var(--font-interface);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--color-forest);
+  background: rgba(27, 61, 47, 0.06);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(27, 61, 47, 0.12);
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <section style="padding-top: calc(var(--header-height) + 28px); padding-bottom: 80px; background: var(--color-ivory); min-height: 85vh;">
   <div class="container" style="max-width: 1040px;">
@@ -101,72 +211,72 @@
     </div>
 
     <!-- Main Payment Form & History Grid -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
+    <div class="payment-grid">
       
       <!-- Payment Submission Box -->
-      <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 26px; box-shadow: var(--shadow-sm);">
-        <h2 style="font-family: var(--font-heading); font-size: 22px; color: var(--color-forest); margin: 0 0 8px;">
-          Submit Simulated Payment
+      <div class="payment-card">
+        <h2 style="font-family: var(--font-heading); font-size: 22px; color: var(--color-forest); margin: 0 0 6px;">
+          Submit Payment
         </h2>
-        <p style="font-size: 13px; color: var(--color-text-muted); margin-bottom: 20px;">
+        <p style="font-size: 13px; color: var(--color-text-muted); margin: 0 0 20px; line-height: 1.5;">
           Choose whether to settle the entire remaining amount or make a flexible partial payment towards your reservation.
         </p>
 
         {% if financials.outstanding_balance <= 0 %}
-          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius-sm); padding: 20px; text-align: center;">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2" style="margin-bottom: 8px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-            <h4 style="font-family: var(--font-heading); font-size: 18px; color: #166534; margin: 0 0 6px;">Folio Fully Settled</h4>
-            <p style="font-size: 13px; color: #166534; margin: 0 0 16px;">There is no remaining balance due for this booking.</p>
-            <a href="{{ url_for('checkout_billing', booking_id=booking.id) }}" class="btn btn-forest" style="font-size: 12px; height: 38px;">
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius-sm); padding: 28px 20px; text-align: center; margin: auto 0;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2" style="margin-bottom: 10px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <h4 style="font-family: var(--font-heading); font-size: 20px; color: #166534; margin: 0 0 6px;">Folio Fully Settled</h4>
+            <p style="font-size: 13px; color: #166534; margin: 0 0 18px;">There is no outstanding balance due for this reservation.</p>
+            <a href="{{ url_for('checkout_billing', booking_id=booking.id) }}" class="btn btn-forest" style="font-size: 12px; height: 38px; display: inline-flex; align-items: center; justify-content: center; padding: 0 20px;">
               View Final Checkout Folio
             </a>
           </div>
         {% else %}
-          <form method="POST" action="{{ url_for('booking_payments', booking_id=booking.id) }}" id="paymentForm">
+          <form method="POST" action="{{ url_for('booking_payments', booking_id=booking.id) }}" id="paymentForm" style="display: flex; flex-direction: column; flex-grow: 1;">
             
             <!-- Payment Type Selection -->
-            <label style="display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted); margin-bottom: 8px;">
-              Select Payment Option
-            </label>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px;">
-              <label style="border: 2px solid var(--color-border); border-radius: var(--radius-sm); padding: 12px; cursor: pointer; display: flex; flex-direction: column; gap: 4px; transition: all 0.2s;" id="labelFull">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <input type="radio" name="payment_type" value="full" checked onchange="togglePaymentType('full')">
-                  <strong style="font-size: 13px; color: var(--color-forest);">Full Payment</strong>
-                </div>
-                <span style="font-size: 12px; color: var(--color-text-muted); padding-left: 22px;">Pay {{ financials.outstanding_balance_formatted }}</span>
-              </label>
+            <div class="payment-form-group">
+              <label class="payment-label">Select Payment Option</label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <label class="payment-type-option" id="labelFull">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="radio" name="payment_type" value="full" checked onchange="togglePaymentType('full')" style="accent-color: var(--color-forest); margin: 0; cursor: pointer;">
+                    <strong style="font-size: 13px; color: var(--color-forest);">Full Settlement</strong>
+                  </div>
+                  <span style="font-size: 12px; color: var(--color-forest-muted); font-weight: 600; padding-left: 20px;">{{ financials.outstanding_balance_formatted }}</span>
+                </label>
 
-              <label style="border: 2px solid var(--color-border); border-radius: var(--radius-sm); padding: 12px; cursor: pointer; display: flex; flex-direction: column; gap: 4px; transition: all 0.2s;" id="labelPartial">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <input type="radio" name="payment_type" value="partial" onchange="togglePaymentType('partial')">
-                  <strong style="font-size: 13px; color: var(--color-forest);">Partial Payment</strong>
-                </div>
-                <span style="font-size: 12px; color: var(--color-text-muted); padding-left: 22px;">Custom partial amount</span>
-              </label>
+                <label class="payment-type-option" id="labelPartial">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="radio" name="payment_type" value="partial" onchange="togglePaymentType('partial')" style="accent-color: var(--color-forest); margin: 0; cursor: pointer;">
+                    <strong style="font-size: 13px; color: var(--color-forest);">Partial Amount</strong>
+                  </div>
+                  <span style="font-size: 12px; color: var(--color-text-muted); padding-left: 20px;">Custom payment</span>
+                </label>
+              </div>
             </div>
 
             <!-- Custom Amount Input (Hidden for Full) -->
-            <div id="partialAmountBox" style="display: none; margin-bottom: 18px;">
-              <label for="amount" style="display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted); margin-bottom: 6px;">
-                Partial Amount (₹)
+            <div id="partialAmountBox" class="payment-form-group" style="display: none;">
+              <label for="amount" class="payment-label">
+                Partial Amount to Pay (₹)
               </label>
               <div style="position: relative;">
-                <span style="position: absolute; left: 14px; top: 12px; color: var(--color-text-muted); font-size: 14px; font-weight: 600;">₹</span>
-                <input type="number" step="0.01" min="1" max="{{ financials.outstanding_balance }}" id="amount" name="amount" placeholder="e.g. 5000" style="width: 100%; height: 42px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 0 14px 0 32px; font-size: 14px; font-family: var(--font-body); font-weight: 600;">
+                <span style="position: absolute; left: 14px; top: 12px; color: var(--color-forest-muted); font-size: 14px; font-weight: 700;">₹</span>
+                <input type="number" step="0.01" min="1" max="{{ financials.outstanding_balance }}" id="amount" name="amount" placeholder="Enter amount, e.g. 5000" class="payment-input" style="padding-left: 32px; font-weight: 600;">
               </div>
-              <small style="font-size: 11px; color: var(--color-text-muted); display: block; margin-top: 4px;">
+              <small style="font-size: 11px; color: var(--color-text-muted); display: block; margin-top: 2px;">
                 Must be greater than ₹0 and not exceed balance of {{ financials.outstanding_balance_formatted }}.
               </small>
             </div>
 
             <!-- Payment Method -->
-            <div style="margin-bottom: 18px;">
-              <label for="payment_method" style="display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted); margin-bottom: 6px;">
-                Payment Method (Simulated)
+            <div class="payment-form-group">
+              <label for="payment_method" class="payment-label">
+                Payment Channel
               </label>
-              <select name="payment_method" id="payment_method" style="width: 100%; height: 42px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 0 12px; font-size: 13px; font-family: var(--font-body); background: #ffffff;">
-                <option value="UPI">UPI (Google Pay, PhonePe, Paytm)</option>
+              <select name="payment_method" id="payment_method" class="payment-select" onchange="handlePaymentMethodChange(this.value)">
+                <option value="UPI">UPI (Google Pay, PhonePe, Paytm, BHIM)</option>
                 <option value="Credit/Debit Card">Credit / Debit Card (Visa, Mastercard, RuPay)</option>
                 <option value="Net Banking">Net Banking (HDFC, ICICI, SBI, Axis)</option>
                 <option value="Cash at Front Desk">Cash at Front Desk</option>
@@ -174,20 +284,33 @@
               </select>
             </div>
 
-            <!-- Notes / Remarks -->
-            <div style="margin-bottom: 22px;">
-              <label for="notes" style="display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted); margin-bottom: 6px;">
-                Transaction Notes (Optional)
+            <!-- Optional UPI / VPA Field (Visible when UPI is selected) -->
+            <div id="upiFieldBox" class="payment-form-group">
+              <label for="upi_id" class="payment-label">
+                UPI ID / VPA (Optional)
               </label>
-              <input type="text" name="notes" id="notes" placeholder="e.g., Paid via GPay or Card ending in 4022" style="width: 100%; height: 40px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 0 12px; font-size: 13px; font-family: var(--font-body);">
+              <input type="text" name="upi_id" id="upi_id" placeholder="e.g. mobile@upi or username@okhdfcbank" class="payment-input">
+              <small style="font-size: 11px; color: var(--color-text-muted); display: block; margin-top: 2px;">
+                Enter your UPI Virtual Payment Address for simulated payment approval.
+              </small>
+            </div>
+
+            <!-- Notes / Remarks -->
+            <div class="payment-form-group">
+              <label for="notes" class="payment-label">
+                Transaction Reference / Notes (Optional)
+              </label>
+              <input type="text" name="notes" id="notes" placeholder="e.g., Paid via card ending in 4022 or counter cash" class="payment-input">
             </div>
 
             <!-- Action Buttons -->
-            <button type="submit" class="btn btn-gold" style="width: 100%; height: 44px; font-size: 13px; font-weight: 600; letter-spacing: 0.5px;">
-              Confirm Simulated Payment
-            </button>
-            <div style="text-align: center; margin-top: 10px; font-size: 11px; color: var(--color-text-muted);">
-              Secure demonstration sandbox &bull; Instant balance deduction
+            <div style="margin-top: auto; padding-top: 8px;">
+              <button type="submit" class="btn btn-gold" style="width: 100%; height: 46px; font-size: 12.5px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;">
+                Confirm Payment Settlement
+              </button>
+              <div style="text-align: center; margin-top: 10px; font-size: 11px; color: var(--color-text-muted);">
+                Instant balance deduction &bull; Automated folio reconciliation
+              </div>
             </div>
           </form>
         {% endif %}
@@ -195,44 +318,44 @@
       </div>
 
       <!-- Payment History Ledger -->
-      <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 26px; box-shadow: var(--shadow-sm);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <div class="payment-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--color-border);">
           <h2 style="font-family: var(--font-heading); font-size: 22px; color: var(--color-forest); margin: 0;">
             Payment History
           </h2>
-          <span style="font-size: 12px; color: var(--color-text-muted); font-weight: 500;">
-            {{ payments|length }} record(s)
+          <span style="font-size: 11px; font-weight: 600; color: var(--color-forest-muted); background: var(--color-ivory); border: 1px solid var(--color-border); padding: 4px 10px; border-radius: 12px;">
+            {{ payments|length }} Transaction(s)
           </span>
         </div>
 
         {% if payments %}
-          <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; flex-direction: column; gap: 12px; flex-grow: 1;">
             {% for p in payments %}
-              <div style="border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 14px; background: #fafaf8; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
-                <div>
-                  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                    <span style="font-family: var(--font-heading); font-size: 15px; font-weight: 700; color: var(--color-forest);">
+              <div class="payment-history-item">
+                <div style="flex-grow: 1;">
+                  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap;">
+                    <span class="txn-badge">
                       {{ p.transaction_ref }}
                     </span>
-                    <span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #dcfce7; color: #166534; font-weight: 600;">
+                    <span style="font-size: 10px; padding: 2px 8px; border-radius: 4px; background: #dcfce7; color: #166534; font-weight: 600; text-transform: uppercase;">
                       {{ p.transaction_status }}
                     </span>
                   </div>
-                  <div style="font-size: 12px; color: var(--color-text-secondary); margin-bottom: 2px;">
-                    Method: <strong>{{ p.payment_method }}</strong>
+                  <div style="font-size: 12.5px; color: var(--color-text-secondary); margin-bottom: 3px;">
+                    Method: <strong style="color: var(--color-forest);">{{ p.payment_method }}</strong>
                   </div>
                   <div style="font-size: 11px; color: var(--color-text-muted);">
                     Date: {{ p.transaction_date }}
                   </div>
                   {% if p.notes %}
-                    <div style="font-size: 11px; color: var(--color-forest-muted); margin-top: 4px; font-style: italic;">
+                    <div style="font-size: 11.5px; color: var(--color-forest-muted); margin-top: 6px; font-style: italic; background: rgba(0,0,0,0.02); padding: 4px 8px; border-radius: 4px; border-left: 2px solid var(--color-gold);">
                       &ldquo;{{ p.notes }}&rdquo;
                     </div>
                   {% endif %}
                 </div>
 
-                <div style="text-align: right;">
-                  <div style="font-family: var(--font-body); font-size: 16px; font-weight: 700; color: #166534;">
+                <div style="text-align: right; flex-shrink: 0;">
+                  <div style="font-family: var(--font-interface); font-size: 16px; font-weight: 700; color: #166534; font-feature-settings: 'tnum' 1;">
                     +{{ p.amount|currency }}
                   </div>
                 </div>
@@ -240,16 +363,17 @@
             {% endfor %}
           </div>
         {% else %}
-          <div style="text-align: center; padding: 40px 16px; background: #fafaf8; border-radius: var(--radius-sm); border: 1px dashed var(--color-border);">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="1.5" style="margin-bottom: 8px;"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
-            <div style="font-size: 13px; color: var(--color-text-muted);">No payments recorded yet for this reservation.</div>
+          <div style="text-align: center; padding: 48px 16px; background: #fafaf8; border-radius: var(--radius-sm); border: 1px dashed var(--color-border); margin: auto 0;">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="1.5" style="margin-bottom: 10px;"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+            <div style="font-size: 13.5px; font-weight: 500; color: var(--color-forest);">No payments recorded yet</div>
+            <div style="font-size: 12px; color: var(--color-text-muted); margin-top: 4px;">Use the payment form to record your first transaction.</div>
           </div>
         {% endif %}
 
         <!-- Quick Links Box -->
-        <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
-          <span style="color: var(--color-text-muted);">Need assistance?</span>
-          <a href="{{ url_for('contact') }}" style="color: var(--color-forest); font-weight: 600; text-decoration: none;">Contact Front Desk</a>
+        <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
+          <span style="color: var(--color-text-muted);">Need assistance with billing?</span>
+          <a href="{{ url_for('contact') }}" style="color: var(--color-forest); font-weight: 600; text-decoration: none;">Contact Front Desk &rarr;</a>
         </div>
       </div>
 
@@ -266,23 +390,40 @@ function togglePaymentType(type) {
   var labelPartial = document.getElementById('labelPartial');
 
   if (type === 'partial') {
-    partialBox.style.display = 'block';
-    amountInput.required = true;
-    labelPartial.style.borderColor = 'var(--color-gold)';
-    labelPartial.style.background = 'var(--color-gold-soft)';
-    labelFull.style.borderColor = 'var(--color-border)';
-    labelFull.style.background = 'transparent';
+    if (partialBox) partialBox.style.display = 'flex';
+    if (amountInput) amountInput.required = true;
+    if (labelPartial) labelPartial.classList.add('active');
+    if (labelFull) labelFull.classList.remove('active');
   } else {
-    partialBox.style.display = 'none';
-    amountInput.required = false;
-    labelFull.style.borderColor = 'var(--color-gold)';
-    labelFull.style.background = 'var(--color-gold-soft)';
-    labelPartial.style.borderColor = 'var(--color-border)';
-    labelPartial.style.background = 'transparent';
+    if (partialBox) partialBox.style.display = 'none';
+    if (amountInput) {
+      amountInput.required = false;
+      amountInput.value = '';
+    }
+    if (labelFull) labelFull.classList.add('active');
+    if (labelPartial) labelPartial.classList.remove('active');
   }
 }
-// Set initial styling
-togglePaymentType('full');
+
+function handlePaymentMethodChange(method) {
+  var upiBox = document.getElementById('upiFieldBox');
+  if (upiBox) {
+    if (method === 'UPI') {
+      upiBox.style.display = 'flex';
+    } else {
+      upiBox.style.display = 'none';
+    }
+  }
+}
+
+// Initial setup on page load
+document.addEventListener('DOMContentLoaded', function() {
+  togglePaymentType('full');
+  var methodSelect = document.getElementById('payment_method');
+  if (methodSelect) {
+    handlePaymentMethodChange(methodSelect.value);
+  }
+});
 </script>
 {% endblock %}
 

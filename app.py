@@ -895,7 +895,15 @@ def booking_payments(booking_id):
         payment_type = request.form.get('payment_type', 'full')
         amount_input = request.form.get('amount')
         payment_method = request.form.get('payment_method', 'UPI')
+        upi_id = request.form.get('upi_id', '').strip()
         notes = request.form.get('notes', '').strip()
+
+        # If UPI ID is provided, append it neatly to transaction remarks if not already present
+        if payment_method == 'UPI' and upi_id:
+            if notes:
+                notes = f"{notes} (VPA: {upi_id})"
+            else:
+                notes = f"UPI VPA: {upi_id}"
 
         # Fetch current ledger & payments
         expenses = conn.execute('SELECT * FROM expenses WHERE booking_id = ?', (booking_id,)).fetchall()
@@ -930,9 +938,12 @@ def booking_payments(booking_id):
             conn.close()
             return redirect(url_for('booking_payments', booking_id=booking_id))
 
-        # Generate unique transaction reference PAY-2026-XXXX
-        count_pmt = conn.execute('SELECT COUNT(*) FROM payments').fetchone()[0]
-        tx_ref = f"PAY-2026-{count_pmt + 1:04d}"
+        # Generate unique professional transaction reference TXN-XXXXXX
+        rand_suffix = random.randint(100000, 999999)
+        tx_ref = f"TXN-{rand_suffix}"
+        while conn.execute('SELECT id FROM payments WHERE transaction_ref = ?', (tx_ref,)).fetchone():
+            rand_suffix = random.randint(100000, 999999)
+            tx_ref = f"TXN-{rand_suffix}"
 
         conn.execute('''INSERT INTO payments (transaction_ref, booking_id, customer_id, amount, payment_method, transaction_status, notes)
                         VALUES (?, ?, ?, ?, ?, 'Success', ?)''',
@@ -1228,8 +1239,11 @@ def checkout_billing(booking_id):
             amount_to_pay = fin['outstanding_balance']
 
             if amount_to_pay > 0:
-                count_pmt = conn.execute('SELECT COUNT(*) FROM payments').fetchone()[0]
-                tx_ref = f"PAY-2026-{count_pmt + 1:04d}"
+                rand_suffix = random.randint(100000, 999999)
+                tx_ref = f"TXN-{rand_suffix}"
+                while conn.execute('SELECT id FROM payments WHERE transaction_ref = ?', (tx_ref,)).fetchone():
+                    rand_suffix = random.randint(100000, 999999)
+                    tx_ref = f"TXN-{rand_suffix}"
                 conn.execute('''INSERT INTO payments (transaction_ref, booking_id, customer_id, amount, payment_method, transaction_status, notes)
                                 VALUES (?, ?, ?, ?, ?, 'Success', 'Final checkout balance settlement')''',
                              (tx_ref, booking_id, booking['customer_id'], amount_to_pay, pay_method))
@@ -1929,8 +1943,11 @@ def admin_checkout_flow(booking_id):
                 flash('Please enter a valid payment amount greater than zero.', 'error')
                 return redirect(url_for('admin_checkout_flow', booking_id=booking_id))
 
-            count_pmt = conn.execute('SELECT COUNT(*) FROM payments').fetchone()[0]
-            tx_ref = f"PAY-2026-{count_pmt + 1:04d}"
+            rand_suffix = random.randint(100000, 999999)
+            tx_ref = f"TXN-{rand_suffix}"
+            while conn.execute('SELECT id FROM payments WHERE transaction_ref = ?', (tx_ref,)).fetchone():
+                rand_suffix = random.randint(100000, 999999)
+                tx_ref = f"TXN-{rand_suffix}"
 
             conn.execute('''INSERT INTO payments (transaction_ref, booking_id, customer_id, amount, payment_method, transaction_status, notes)
                             VALUES (?, ?, ?, ?, ?, 'Success', ?)''',
