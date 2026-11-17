@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block title %}Dining & Room Service Menu — RETREAT Hotel & Suites{% endblock %}
+
+{% block content %}
+<section style="padding-top: calc(var(--header-height) + 28px); padding-bottom: 80px; background: var(--color-ivory); min-height: 85vh;">
+  <div class="container" style="max-width: 1140px;">
+
+    <!-- Top Hero Banner -->
+    <div style="background: linear-gradient(135deg, var(--color-forest) 0%, #0d2820 100%); border-radius: var(--radius-sm); padding: 36px 32px; color: #ffffff; margin-bottom: 28px; position: relative; overflow: hidden; box-shadow: var(--shadow-md);">
+      <div style="position: relative; z-index: 2; max-width: 650px;">
+        <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--color-gold); font-weight: 600; display: block; margin-bottom: 6px;">
+          Gourmet Room Service &amp; In-Room Dining
+        </span>
+        <h1 style="font-family: var(--font-heading); font-size: 34px; color: #ffffff; margin: 0 0 10px; line-height: 1.15;">
+          Curated Flavors Delivered to Your Door
+        </h1>
+        <p style="font-size: 14px; color: rgba(255, 255, 255, 0.8); line-height: 1.5; margin: 0;">
+          Select from our chefs' specialties. Delivered hot to your room and automatically added to your guest folio upon verification.
+        </p>
+      </div>
+      <div style="position: absolute; right: -20px; bottom: -20px; width: 220px; height: 220px; background: radial-gradient(circle, rgba(201, 161, 91, 0.15) 0%, transparent 70%); border-radius: 50%;"></div>
+    </div>
+
+    <!-- Active Booking Folio Banner (Selector) -->
+    <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 18px 24px; margin-bottom: 26px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; box-shadow: var(--shadow-sm);">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--color-forest-tint); display: flex; align-items: center; justify-content: center; color: var(--color-forest); flex-shrink: 0;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        </div>
+        <div>
+          <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted); font-weight: 600; display: block; margin-bottom: 3px;">
+            Deliver To Room &bull; Guest Folio
+          </span>
+          {% if active_bookings %}
+            <select id="activeBookingSelect" style="border: 1px solid var(--color-border); border-radius: 4px; padding: 6px 12px; font-size: 13px; font-weight: 600; color: var(--color-forest); background: #ffffff;">
+              {% for b in active_bookings %}
+                {% set rnum = 300 + (b.id % 20) %}
+                <option value="{{ b.id }}" {% if preselected_bid == b.id %}selected{% endif %}>
+                  Room #{{ "%03d"|format(rnum) }} &bull; {{ b.room_name }} (Ref: {{ b.booking_code }}) &bull; Guest: {{ b.guest_name }}
+                </option>
+              {% endfor %}
+            </select>
+          {% elif preselected_booking %}
+            {% set rnum = 300 + (preselected_booking.id % 20) %}
+            <div style="font-size: 13px; font-weight: 600; color: var(--color-forest);">
+              Room #{{ "%03d"|format(rnum) }} &bull; {{ preselected_booking.room_name }} (Ref: {{ preselected_booking.booking_code }})
+            </div>
+            <input type="hidden" id="activeBookingSelect" value="{{ preselected_booking.id }}">
+          {% else %}
+            <span style="font-size: 13px; color: #b91c1c; font-weight: 600;">No active checked-in reservation found.</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px; align-items: center;">
+        {% if preselected_bid %}
+          <a href="{{ url_for('booking_details', booking_id=preselected_bid) }}" class="btn btn-outline-forest" style="height: 40px; padding: 0 16px; font-size: 11px;">
+            Reservation Folio
+          </a>
+        {% endif %}
+        <!-- Floating Cart Button -->
+        <button onclick="toggleCartDrawer()" class="btn btn-gold" style="height: 40px; padding: 0 20px; font-size: 12px; display: flex; align-items: center; gap: 8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+          <span>View Cart (<span id="cartCount">0</span> items)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Category Filters Navigation -->
+    <div style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 24px;">
+      <a href="{{ url_for('food_menu', booking_id=preselected_bid) }}" class="btn {% if not current_cat %}btn-forest{% else %}btn-outline-forest{% endif %}" style="height: 36px; padding: 0 18px; font-size: 12px; white-space: nowrap;">
+        All Items
+      </a>
+      {% for cat in categories %}
+        <a href="{{ url_for('food_menu', category=cat, booking_id=preselected_bid) }}" class="btn {% if current_cat == cat %}btn-forest{% else %}btn-outline-forest{% endif %}" style="height: 36px; padding: 0 18px; font-size: 12px; white-space: nowrap;">
+          {{ cat }}
+        </a>
+      {% endfor %}
+    </div>
+
+    <!-- Menu Items Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-bottom: 40px;">
+      {% for item in menu_items %}
+        <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; box-shadow: var(--shadow-sm); transition: transform 0.2s;">
+          <div style="height: 180px; position: relative; overflow: hidden; background: #eceae5;">
+            <img src="{{ item.image_url }}" alt="{{ item.name }}" loading="lazy" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80';" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+            <span style="position: absolute; top: 12px; left: 12px; background: rgba(255, 255, 255, 0.9); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: {% if item.is_veg %}#16a34a{% else %}#dc2626{% endif %}; display: inline-block;"></span>
+              {% if item.is_veg %}Vegetarian{% else %}Non-Veg{% endif %}
+            </span>
+            <span style="position: absolute; top: 12px; right: 12px; background: rgba(21, 63, 50, 0.85); color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 10px; text-transform: uppercase; font-weight: 600;">
+              {{ item.category }}
+            </span>
+          </div>
+
+          <div style="padding: 16px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <h3 style="font-family: var(--font-heading); font-size: 18px; color: var(--color-forest); margin: 0 0 6px;">
+                {{ item.name }}
+              </h3>
+              <p style="font-size: 12px; color: var(--color-text-muted); line-height: 1.4; margin: 0 0 12px;">
+                {{ item.description }}
+              </p>
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--color-border); padding-top: 12px; margin-top: 8px;">
+              <div style="font-family: var(--font-body); font-size: 17px; font-weight: 700; color: var(--color-forest);">
+                {{ item.price|currency }}
+              </div>
+              <button onclick="addToCart({{ item.id }}, '{{ item.name|replace("'", "\\'") }}', {{ item.price }}, '{{ item.category }}')" class="btn btn-outline-forest" style="height: 32px; padding: 0 14px; font-size: 11px; font-weight: 600;">
+                + Add to Order
+              </button>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Floating / Slide-over Cart Drawer Modal -->
+    <div id="cartModal" style="display: none; position: fixed; top: 0; right: 0; bottom: 0; left: 0; background: rgba(0, 0, 0, 0.5); z-index: 9999; justify-content: flex-end;">
+      <div style="width: 100%; max-width: 440px; background: #ffffff; height: 100%; display: flex; flex-direction: column; box-shadow: -4px 0 20px rgba(0,0,0,0.2);">
+        
+        <!-- Cart Header -->
+        <div style="padding: 20px; border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; background: var(--color-forest); color: #ffffff;">
+          <div>
+            <h3 style="font-family: var(--font-heading); font-size: 20px; margin: 0; color: #ffffff;">Room Service Cart</h3>
+            <span style="font-size: 12px; color: var(--color-gold);">Review &amp; Place In-Room Dining Order</span>
+          </div>
+          <button onclick="toggleCartDrawer()" style="background: none; border: none; color: #ffffff; font-size: 24px; cursor: pointer;">&times;</button>
+        </div>
+
+        <!-- Cart Items List -->
+        <div id="cartItemsContainer" style="padding: 20px; flex-grow: 1; overflow-y: auto;">
+          <!-- Rendered via JS -->
+        </div>
+
+        <!-- Cart Footer -->
+        <div style="padding: 20px; border-top: 1px solid var(--color-border); background: #fafaf8;">
+          <div style="margin-bottom: 12px;">
+            <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--color-text-muted); display: block; margin-bottom: 4px;">Delivery Instructions / Dietary Requests</label>
+            <input type="text" id="deliveryNotes" placeholder="e.g. Extra napkins, deliver at 8:30 PM" style="width: 100%; height: 38px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 0 10px; font-size: 12px;">
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <span style="font-size: 14px; font-weight: 600; color: var(--color-forest);">Total Amount:</span>
+            <span id="cartTotalPrice" style="font-size: 18px; font-weight: 700; color: var(--color-forest);">₹0</span>
+          </div>
+
+          <button onclick="submitFoodOrder()" id="btnSubmitOrder" class="btn btn-gold" style="width: 100%; height: 44px; font-size: 13px; font-weight: 600;">
+            Place Order to Room Folio
+          </button>
+          <div style="text-align: center; margin-top: 8px; font-size: 11px; color: var(--color-text-muted);">
+            Payment settled at room checkout &bull; Delivered hot
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<script>
+let cart = [];
+
+function addToCart(id, name, price, category) {
+  const existing = cart.find(i => i.id === id);
+  if (existing) {
+    existing.qty += 1;
+  } else {
+    cart.push({ id, name, price, category, qty: 1 });
+  }
+  updateCartUI();
+  toggleCartDrawer(true);
+}
+
+function changeQty(id, delta) {
+  const item = cart.find(i => i.id === id);
+  if (item) {
+    item.qty += delta;
+    if (item.qty <= 0) {
+      cart = cart.filter(i => i.id !== id);
+    }
+  }
+  updateCartUI();
+}
+
+function updateCartUI() {
+  const countEl = document.getElementById('cartCount');
+  const itemsContainer = document.getElementById('cartItemsContainer');
+  const totalEl = document.getElementById('cartTotalPrice');
+  const btnSubmit = document.getElementById('btnSubmitOrder');
+
+  const totalCount = cart.reduce((sum, i) => sum + i.qty, 0);
+  const totalAmount = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+
+  countEl.innerText = totalCount;
+  totalEl.innerText = '₹' + totalAmount.toLocaleString('en-IN');
+
+  if (cart.length === 0) {
+    itemsContainer.innerHTML = `
+      <div style="text-align: center; padding: 40px 10px; color: var(--color-text-muted);">
+        <p style="font-size: 14px; margin-bottom: 6px;">Your cart is empty.</p>
+        <span style="font-size: 12px;">Add dishes from the menu to start your order.</span>
+      </div>
+    `;
+    btnSubmit.disabled = true;
+    btnSubmit.style.opacity = '0.5';
+  } else {
+    btnSubmit.disabled = false;
+    btnSubmit.style.opacity = '1';
+    let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
+    cart.forEach(item => {
+      html += `
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); padding-bottom: 10px;">
+          <div>
+            <div style="font-weight: 600; font-size: 13px; color: var(--color-forest);">${item.name}</div>
+            <div style="font-size: 11px; color: var(--color-text-muted);">₹${item.price.toLocaleString('en-IN')} &times; ${item.qty}</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button onclick="changeQty(${item.id}, -1)" style="width: 26px; height: 26px; border-radius: 4px; border: 1px solid var(--color-border); background: #fff; cursor: pointer; font-weight: 600;">-</button>
+            <span style="font-size: 13px; font-weight: 600; min-width: 16px; text-align: center;">${item.qty}</span>
+            <button onclick="changeQty(${item.id}, 1)" style="width: 26px; height: 26px; border-radius: 4px; border: 1px solid var(--color-border); background: #fff; cursor: pointer; font-weight: 600;">+</button>
+            <span style="font-size: 13px; font-weight: 700; color: var(--color-forest); margin-left: 6px;">₹${(item.price * item.qty).toLocaleString('en-IN')}</span>
+          </div>
+        </div>
+      `;
+    });
+    html += '</div>';
+    itemsContainer.innerHTML = html;
+  }
+}
+
+function toggleCartDrawer(open) {
+  const modal = document.getElementById('cartModal');
+  if (open === true) {
+    modal.style.display = 'flex';
+  } else if (open === false) {
+    modal.style.display = 'none';
+  } else {
+    modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+  }
+}
+
+function submitFoodOrder() {
+  const bookingSelect = document.getElementById('activeBookingSelect');
+  if (!bookingSelect || !bookingSelect.value) {
+    alert('Please select an active reservation to place this order.');
+    return;
+  }
+
+  const bookingId = bookingSelect.value;
+  const notes = document.getElementById('deliveryNotes').value;
+
+  fetch('/api/order-food', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      booking_id: bookingId,
+      items: cart,
+      delivery_notes: notes
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.status === 'success') {
+      alert(`Order Placed Successfully!\n\nOrder Ref: ${data.order_ref}\nAmount: ${data.total_amount}\nStatus: Placed\n\nYour order has been sent to our kitchen. When delivered by staff, it will appear as a finalized expense in your room ledger.`);
+      cart = [];
+      updateCartUI();
+      toggleCartDrawer(false);
+      window.location.href = `/bookings/${bookingId}/ledger`;
+    } else {
+      alert('Error: ' + data.message);
+    }
+  })
+  .catch(err => {
+    alert('An unexpected error occurred while placing your order.');
+    console.error(err);
+  });
+}
+
+// Initial UI setup
+updateCartUI();
+</script>
+{% endblock %}
+

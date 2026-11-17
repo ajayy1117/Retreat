@@ -1,0 +1,224 @@
+{% extends "admin/base_admin.html" %}
+
+{% block page_title %}Reservations &amp; Guest Folios{% endblock %}
+{% block page_subtitle %}Search, room allocation, check-in verification, and billing folios{% endblock %}
+
+{% block topbar_actions %}
+<a href="{{ url_for('admin_checkin_checkout') }}" class="admin-btn admin-btn-forest" style="font-size: 11.5px; height: 32px;">
+  Front Desk Arrivals / Departures
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+  
+  <!-- Section Header & Booking Status Filter Tabs -->
+  <div class="admin-card-header" style="flex-direction: column; align-items: stretch; gap: 14px;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+      <!-- Status Tabs -->
+      <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+        <a href="{{ url_for('admin_bookings') }}" class="admin-btn {% if not current_status %}admin-btn-forest{% else %}admin-btn-outline{% endif %}" style="font-size: 11.5px; height: 32px;">
+          All ({{ bookings|length }})
+        </a>
+        <a href="{{ url_for('admin_bookings', status='Confirmed') }}" class="admin-btn {% if current_status == 'Confirmed' %}admin-btn-forest{% else %}admin-btn-outline{% endif %}" style="font-size: 11.5px; height: 32px;">
+          Confirmed
+        </a>
+        <a href="{{ url_for('admin_bookings', status='Checked In') }}" class="admin-btn {% if current_status == 'Checked In' %}admin-btn-forest{% else %}admin-btn-outline{% endif %}" style="font-size: 11.5px; height: 32px;">
+          Checked In
+        </a>
+        <a href="{{ url_for('admin_bookings', status='Checked Out') }}" class="admin-btn {% if current_status == 'Checked Out' %}admin-btn-forest{% else %}admin-btn-outline{% endif %}" style="font-size: 11.5px; height: 32px;">
+          Checked Out
+        </a>
+        <a href="{{ url_for('admin_bookings', status='Cancelled') }}" class="admin-btn {% if current_status == 'Cancelled' %}admin-btn-forest{% else %}admin-btn-outline{% endif %}" style="font-size: 11.5px; height: 32px;">
+          Cancelled
+        </a>
+      </div>
+
+      <div class="numeric-value" style="font-size: 12px; color: var(--color-text-muted);">
+        Total: <strong>{{ bookings|length }}</strong> reservation(s)
+      </div>
+    </div>
+
+    <!-- Unified Filter Toolbar (Only One Search Field for the Reservations Section) -->
+    <form method="GET" action="{{ url_for('admin_bookings') }}" class="admin-filter-toolbar">
+      {% if current_status %}
+        <input type="hidden" name="status" value="{{ current_status }}">
+      {% endif %}
+
+      <!-- Search Field (Customer name, booking ref, email, phone, room number) -->
+      <div style="flex: 1; min-width: 240px;">
+        <input type="text" name="q" value="{{ search_q }}" placeholder="Search customer, ref (RET-...), email, phone, room #..." class="admin-input" style="width: 100%;">
+      </div>
+
+      <!-- Date Filters -->
+      <div class="admin-filter-group">
+        <label class="admin-filter-label">Check-in From:</label>
+        <input type="date" name="from" value="{{ date_from }}" class="admin-input" style="width: 135px;">
+      </div>
+
+      <div class="admin-filter-group">
+        <label class="admin-filter-label">Check-out To:</label>
+        <input type="date" name="to" value="{{ date_to }}" class="admin-input" style="width: 135px;">
+      </div>
+
+      <!-- Filter Buttons -->
+      <div style="display: flex; gap: 6px; align-items: center;">
+        <button type="submit" class="admin-btn admin-btn-forest" style="height: 36px; padding: 0 16px;">
+          Filter
+        </button>
+
+        {% if search_q or date_from or date_to or current_status %}
+          <a href="{{ url_for('admin_bookings') }}" class="admin-btn admin-btn-outline" style="height: 36px; padding: 0 12px;" title="Clear all active filters">
+            Clear Filters
+          </a>
+        {% endif %}
+      </div>
+    </form>
+
+  </div>
+
+  <!-- Standardized Reservations Data Table -->
+  <div class="table-responsive">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th class="col-reference">Booking Ref</th>
+          <th class="col-guest">Customer Information</th>
+          <th class="col-room">Room Information</th>
+          <th class="col-stay">Stay Period</th>
+          <th class="col-guests">Guests</th>
+          <th class="col-status">Booking Status</th>
+          <th class="col-status">Payment Status</th>
+          <th class="col-financial">Outstanding</th>
+          <th class="col-actions">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in bookings %}
+        <tr>
+          <!-- 1. Booking Reference -->
+          <td>
+            <a href="{{ url_for('admin_expenses', booking_id=b.id) }}" class="reference-code numeric-value" style="color: var(--color-forest); font-size: 13.5px; text-decoration: none;">
+              {{ b.booking_code }}
+            </a>
+          </td>
+
+          <!-- 2. Customer Information (Prominent Name, Email below, Phone on single line below) -->
+          <td>
+            <div style="font-weight: 700; color: var(--color-forest); font-size: 13.5px; line-height: 1.25;">
+              {{ b.guest_name }}
+            </div>
+            <div style="font-size: 11.5px; color: var(--color-text-secondary); margin-top: 2px;">
+              {{ b.guest_email }}
+            </div>
+            <div class="numeric-value" style="font-size: 11.5px; color: var(--color-text-muted); margin-top: 1px; white-space: nowrap;">
+              {{ b.guest_phone }}
+            </div>
+          </td>
+
+          <!-- 3. Room Information (Category + Assigned Room or subtle Unassigned) -->
+          <td>
+            <div style="font-weight: 600; color: var(--color-forest); font-size: 13px;">
+              {{ b.room_name }}
+            </div>
+            <div style="margin-top: 3px;">
+              {% if b.status not in ['Cancelled', 'Completed', 'Checked Out'] %}
+                <!-- Inline Quick Assignment Selector -->
+                <form method="POST" action="{{ url_for('admin_assign_room', booking_id=b.id) }}" style="display: inline-block;">
+                  <select name="room_number" onchange="this.form.submit()" class="admin-select" style="height: 26px; font-size: 11px; padding: 0 4px; font-weight: 600; max-width: 175px;">
+                    <option value="">-- Unassigned --</option>
+                    {% for pr in physical_rooms %}
+                      {% if pr.room_category_id == b.room_id %}
+                        <option value="{{ pr.room_number }}" {% if b.assigned_room_number == pr.room_number %}selected{% endif %}>
+                          Room {{ pr.room_number }} · Floor {{ pr.floor }}
+                        </option>
+                      {% endif %}
+                    {% endfor %}
+                  </select>
+                </form>
+              {% else %}
+                {% if b.assigned_room_number %}
+                  <span class="badge badge-checkedin" style="font-size: 10.5px;">Room {{ b.assigned_room_number }}</span>
+                {% else %}
+                  <span style="font-size: 11px; color: var(--color-text-muted); font-style: italic;">Unassigned</span>
+                {% endif %}
+              {% endif %}
+            </div>
+          </td>
+
+          <!-- 4. Stay Period (Formatted dates on one line, Nights & Rooms below) -->
+          <td>
+            <div class="date-value numeric-value" style="font-weight: 600; color: var(--color-forest); font-size: 12.5px; white-space: nowrap;">
+              {{ b.check_in|format_date_span(b.check_out) }}
+            </div>
+            <div class="numeric-value" style="font-size: 11.5px; color: var(--color-text-muted); margin-top: 2px;">
+              {{ b.total_nights }} {% if b.total_nights == 1 %}Night{% else %}Nights{% endif %} · {{ b.rooms_count }} {% if b.rooms_count == 1 %}Room{% else %}Rooms{% endif %}
+            </div>
+          </td>
+
+          <!-- 5. Guests (Grammatically correct full labels: 2 Adults · 1 Child) -->
+          <td class="numeric-value" style="font-size: 12px; color: var(--color-text-primary); white-space: nowrap;">
+            {{ b.guests_adults|format_guest_count(b.guests_children) }}
+          </td>
+
+          <!-- 6. Booking Status Badge -->
+          <td>
+            <span class="badge badge-{{ b.status|lower|replace(' ', '') }}">
+              {{ b.status }}
+            </span>
+          </td>
+
+          <!-- 7. Payment Status Badge -->
+          <td>
+            <span class="badge badge-{{ b.financials.payment_status|lower|replace(' ', '') }}">
+              {{ b.financials.payment_status }}
+            </span>
+          </td>
+
+          <!-- 8. Outstanding Balance (Right-aligned, DM Sans tabular numbers, Indian currency) -->
+          <td style="text-align: right;">
+            {% if b.financials.outstanding_balance > 0 %}
+              <span class="currency-value numeric-value" style="color: #B91C1C; font-size: 13.5px;">
+                {{ b.financials.outstanding_balance_formatted }}
+              </span>
+            {% else %}
+              <span class="numeric-value" style="font-size: 11.5px; color: #15803D; font-weight: 600; white-space: nowrap;">
+                ₹0 — Paid
+              </span>
+            {% endif %}
+          </td>
+
+          <!-- 9. Actions (Contextual based on status, unified styling, no decorative arrows/icons) -->
+          <td style="text-align: right;">
+            <div class="admin-action-group">
+              {% if b.status == 'Confirmed' %}
+                <a href="{{ url_for('admin_checkin_flow', booking_id=b.id) }}" class="admin-btn admin-btn-forest admin-btn-xs">
+                  Check In
+                </a>
+              {% elif b.status == 'Checked In' %}
+                <a href="{{ url_for('admin_checkout_flow', booking_id=b.id) }}" class="admin-btn admin-btn-gold admin-btn-xs">
+                  Check Out
+                </a>
+              {% endif %}
+
+              <a href="{{ url_for('admin_expenses', booking_id=b.id) }}" class="admin-btn admin-btn-outline admin-btn-xs" title="View Guest Folio Statement &amp; Payments">
+                Folio
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="9" style="text-align: center; padding: 40px 16px; color: var(--color-text-muted);">
+            <div style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">No reservations found</div>
+            <div style="font-size: 12px;">Try adjusting your search query, date ranges, or booking status filters.</div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

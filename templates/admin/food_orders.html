@@ -1,0 +1,138 @@
+{% extends "admin/base_admin.html" %}
+
+{% block page_title %}In-Room Dining &amp; Food Orders{% endblock %}
+{% block page_subtitle %}Kitchen preparation, dispatch lifecycle, and delivery ledger billing{% endblock %}
+
+{% block topbar_actions %}
+<a href="{{ url_for('food_menu') }}" target="_blank" class="admin-btn admin-btn-outline" style="font-size: 11.5px; height: 32px;">
+  View Guest Food Menu
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+  
+  <div class="admin-card-header">
+    <div>
+      <h3 class="admin-card-title">Room Service Dispatch Queue</h3>
+      <span style="font-size: 12px; color: var(--color-text-muted);">
+        Delivered orders are automatically added to the guest folio ledger under Food &amp; Beverages.
+      </span>
+    </div>
+    <div class="numeric-value" style="font-size: 12px; color: var(--color-text-muted);">
+      Total: <strong>{{ orders|length }}</strong> order(s)
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th class="col-reference">Order ID</th>
+          <th>Room &amp; Guest</th>
+          <th>Ordered Items</th>
+          <th>Instructions</th>
+          <th class="col-financial">Total Amount</th>
+          <th class="col-status">Lifecycle Status</th>
+          <th class="col-actions">Update Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ord in orders %}
+          <tr>
+            <!-- Order Ref -->
+            <td>
+              <span class="reference-code numeric-value" style="color: var(--color-forest); font-size: 13.5px;">
+                {{ ord.order_ref }}
+              </span>
+              <div class="date-value numeric-value" style="font-size: 11px; color: var(--color-text-muted); margin-top: 2px;">
+                {{ ord.order_date }}
+              </div>
+            </td>
+
+            <!-- Room / Guest -->
+            <td>
+              <div style="font-weight: 700; color: var(--color-forest); font-size: 13px;">
+                {{ ord.room_name }}
+              </div>
+              <div style="font-size: 11.5px; color: var(--color-text-secondary); margin-top: 1px;">
+                {{ ord.guest_name }} · <span class="reference-code numeric-value" style="font-weight: 600; color: var(--color-gold-dark);">{{ ord.booking_code }}</span>
+              </div>
+            </td>
+
+            <!-- Ordered Items Breakdown -->
+            <td style="max-width: 260px;">
+              <div style="display: flex; flex-direction: column; gap: 3px; font-size: 12px;">
+                {% set items = ord.items_json|from_json %}
+                {% for item in items %}
+                  <div>
+                    <strong class="numeric-value">{{ item.quantity }}x</strong> {{ item.name }} 
+                    <span class="currency-value numeric-value" style="color: var(--color-text-muted); font-size: 11px;">({{ item.total|currency }})</span>
+                  </div>
+                {% endfor %}
+              </div>
+            </td>
+
+            <!-- Instructions -->
+            <td style="font-size: 12px; color: var(--color-text-secondary); max-width: 180px;">
+              {{ ord.delivery_notes or 'Standard room service' }}
+            </td>
+
+            <!-- Amount -->
+            <td style="text-align: right;">
+              <strong class="currency-value numeric-value" style="color: var(--color-forest); font-size: 14px;">
+                {{ ord.total_amount|currency }}
+              </strong>
+            </td>
+
+            <!-- Status -->
+            <td>
+              <span class="badge badge-{{ ord.order_status|lower|replace(' ', '-') }}">
+                {{ ord.order_status }}
+              </span>
+              {% if ord.order_status == 'Delivered' %}
+                <div style="font-size: 10.5px; color: #15803D; font-weight: 600; margin-top: 3px;">
+                  ✓ Finalized in Folio
+                </div>
+              {% elif ord.order_status == 'Cancelled' %}
+                <div style="font-size: 10.5px; color: #B91C1C; margin-top: 3px;">
+                  Excluded from Folio
+                </div>
+              {% else %}
+                <div style="font-size: 10.5px; color: #B45309; margin-top: 3px;">
+                  Pending Delivery
+                </div>
+              {% endif %}
+            </td>
+
+            <!-- Update Action Form -->
+            <td style="text-align: right;">
+              <form method="POST" action="{{ url_for('update_food_order_status', order_id=ord.id) }}" class="admin-action-group">
+                <select name="order_status" class="admin-select" style="height: 28px; font-size: 11px; padding: 0 4px; background: #fff;">
+                  <option value="Placed" {% if ord.order_status == 'Placed' %}selected{% endif %}>Placed</option>
+                  <option value="Preparing" {% if ord.order_status == 'Preparing' %}selected{% endif %}>Preparing</option>
+                  <option value="Ready" {% if ord.order_status == 'Ready' %}selected{% endif %}>Ready</option>
+                  <option value="Out for Delivery" {% if ord.order_status == 'Out for Delivery' %}selected{% endif %}>Out for Delivery</option>
+                  <option value="Delivered" {% if ord.order_status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                  <option value="Cancelled" {% if ord.order_status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+
+                <button type="submit" class="admin-btn admin-btn-forest admin-btn-xs">
+                  Update
+                </button>
+              </form>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="7" style="text-align: center; padding: 36px 16px; color: var(--color-text-muted);">
+              No in-room dining orders placed yet.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,277 @@
+{% extends "admin/base_admin.html" %}
+
+{% block page_title %}Revenue Analytics &amp; Hospitality Performance{% endblock %}
+
+{% block content %}
+<!-- Reporting Period Filter Header -->
+<div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 18px 24px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+  <div>
+    <h3 style="font-family: var(--font-heading); font-size: 24px; color: var(--color-forest); margin: 0 0 4px;">
+      Financial Performance &amp; Revenue Analytics
+    </h3>
+    <span style="font-size: 13px; color: var(--color-text-muted);">
+      Hospitality metrics computed from verified folios, room tariffs, F&amp;B deliveries, and settled payments.
+    </span>
+  </div>
+
+  <!-- Date Range Filter Tabs -->
+  <div style="display: flex; gap: 6px; background: #fafaf8; padding: 4px; border-radius: 4px; border: 1px solid var(--color-border);">
+    <a href="{{ url_for('admin_revenue_analytics', period='today') }}" class="admin-btn {% if period == 'today' %}admin-btn-primary{% else %}admin-btn-outline{% endif %}" style="height: 30px; font-size: 11px; padding: 0 10px;">
+      Today
+    </a>
+    <a href="{{ url_for('admin_revenue_analytics', period='7') }}" class="admin-btn {% if period == '7' %}admin-btn-primary{% else %}admin-btn-outline{% endif %}" style="height: 30px; font-size: 11px; padding: 0 10px;">
+      Last 7 Days
+    </a>
+    <a href="{{ url_for('admin_revenue_analytics', period='30') }}" class="admin-btn {% if period == '30' %}admin-btn-primary{% else %}admin-btn-outline{% endif %}" style="height: 30px; font-size: 11px; padding: 0 10px;">
+      Last 30 Days
+    </a>
+    <a href="{{ url_for('admin_revenue_analytics', period='90') }}" class="admin-btn {% if period == '90' %}admin-btn-primary{% else %}admin-btn-outline{% endif %}" style="height: 30px; font-size: 11px; padding: 0 10px;">
+      Last 90 Days
+    </a>
+  </div>
+</div>
+
+<!-- Primary Hospitality KPI Cards -->
+<div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
+  
+  <!-- Occupancy Rate -->
+  <div class="kpi-card" style="padding: 18px 20px;">
+    <div>
+      <div class="kpi-title" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Occupancy Rate</div>
+      <div class="kpi-value numeric-value" style="font-size: 26px; font-weight: 700; color: #1d4ed8; margin: 4px 0;">
+        {{ metrics.occupancy_rate_fmt }}
+      </div>
+      <div class="kpi-change numeric-value" style="font-size: 11px; color: var(--color-text-muted);">
+        {{ metrics.occupied_room_nights }} / {{ metrics.available_room_nights }} room-nights
+      </div>
+    </div>
+    <div class="kpi-icon-box" style="background: #dbeafe; color: #1d4ed8;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+    </div>
+  </div>
+
+  <!-- ADR (Average Daily Rate) -->
+  <div class="kpi-card" style="padding: 18px 20px;">
+    <div>
+      <div class="kpi-title" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Average Daily Rate (ADR)</div>
+      <div class="kpi-value currency-value numeric-value" style="font-size: 26px; font-weight: 700; color: var(--color-forest); margin: 4px 0;">
+        {{ metrics.adr_fmt }}
+      </div>
+      <div class="kpi-change" style="font-size: 11px; color: var(--color-text-muted);">
+        Room revenue / occupied nights
+      </div>
+    </div>
+    <div class="kpi-icon-box" style="background: var(--color-forest-tint); color: var(--color-forest);">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><text x="6" y="18" font-size="18" font-weight="bold" fill="currentColor">₹</text></svg>
+    </div>
+  </div>
+
+  <!-- RevPAR -->
+  <div class="kpi-card" style="padding: 18px 20px;">
+    <div>
+      <div class="kpi-title" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">RevPAR (Fleet Yield)</div>
+      <div class="kpi-value currency-value numeric-value" style="font-size: 26px; font-weight: 700; color: var(--color-forest); margin: 4px 0;">
+        {{ metrics.revpar_fmt }}
+      </div>
+      <div class="kpi-change" style="font-size: 11px; color: var(--color-text-muted);">
+        Room revenue / available fleet
+      </div>
+    </div>
+    <div class="kpi-icon-box" style="background: var(--color-gold-soft); color: var(--color-gold-dark);">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+    </div>
+  </div>
+
+  <!-- Payments Collected -->
+  <div class="kpi-card" style="padding: 18px 20px;">
+    <div>
+      <div class="kpi-title" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Payments Collected</div>
+      <div class="kpi-value currency-value numeric-value" style="font-size: 26px; font-weight: 700; color: #166534; margin: 4px 0;">
+        {{ metrics.total_payments_collected_fmt }}
+      </div>
+      <div class="kpi-change" style="font-size: 11px; color: #166534; font-weight: 600;">
+        Sum of cleared payments
+      </div>
+    </div>
+    <div class="kpi-icon-box" style="background: #dcfce7; color: #166534;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    </div>
+  </div>
+
+</div>
+
+<!-- Accounting Distinction Breakdown Grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 28px;">
+  
+  <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 20px;">
+    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-text-muted); font-weight: 700;">
+      Total Finalized Charges
+    </div>
+    <div class="currency-value numeric-value" style="font-size: 22px; font-weight: 700; color: var(--color-forest); margin: 6px 0 4px;">
+      {{ metrics.total_finalized_charges_fmt }}
+    </div>
+    <p style="font-size: 12px; color: var(--color-text-muted); margin: 0;">
+      All billable accommodation, dining, and chargeable service ledger charges.
+    </p>
+  </div>
+
+  <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 20px;">
+    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-text-muted); font-weight: 700;">
+      Room Accommodation Revenue
+    </div>
+    <div class="currency-value numeric-value" style="font-size: 22px; font-weight: 700; color: var(--color-forest); margin: 6px 0 4px;">
+      {{ metrics.room_revenue_fmt }}
+    </div>
+    <p style="font-size: 12px; color: var(--color-text-muted); margin: 0;">
+      Recognized room accommodation tariffs across non-cancelled reservations.
+    </p>
+  </div>
+
+  <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 20px;">
+    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-text-muted); font-weight: 700;">
+      Dining &amp; Service Revenue
+    </div>
+    <div class="currency-value numeric-value" style="font-size: 22px; font-weight: 700; color: var(--color-forest); margin: 6px 0 4px;">
+      {{ (metrics.dining_revenue + metrics.services_revenue)|currency }}
+    </div>
+    <p style="font-size: 12px; color: var(--color-text-muted); margin: 0;">
+      F&amp;B deliveries ({{ metrics.dining_revenue_fmt }}) + services ({{ metrics.services_revenue_fmt }}).
+    </p>
+  </div>
+
+  <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 20px;">
+    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #b91c1c; font-weight: 700;">
+      Outstanding Guest Balances
+    </div>
+    <div class="currency-value numeric-value" style="font-size: 22px; font-weight: 700; color: #b91c1c; margin: 6px 0 4px;">
+      {{ metrics.total_outstanding_balances_fmt }}
+    </div>
+    <p style="font-size: 12px; color: var(--color-text-muted); margin: 0;">
+      Unpaid folio balances awaiting settlement at checkout.
+    </p>
+  </div>
+
+</div>
+
+<!-- Real Analytics Charts Grid (SVG / CSS Based Visualizations) -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
+
+  <!-- Chart 1: Revenue by Category Breakdown -->
+  <div class="admin-card" style="margin-bottom: 0;">
+    <div class="admin-card-header">
+      <h3 class="admin-card-title">Revenue by Stream</h3>
+    </div>
+    <div style="padding: 24px;">
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        {% set total_stream = metrics.total_finalized_charges if metrics.total_finalized_charges > 0 else 1 %}
+        
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px;">
+            <strong style="color: var(--color-forest);">Room Tariffs &amp; Accommodations</strong>
+            <span class="currency-value numeric-value" style="font-weight: 700;">{{ metrics.room_revenue_fmt }}</span>
+          </div>
+          {% set pct_room = ((metrics.room_revenue / total_stream) * 100)|round(1) %}
+          <div style="height: 12px; border-radius: 6px; background: #e5e7eb; overflow: hidden;">
+            <div style="height: 100%; width: {{ pct_room }}%; background: var(--color-forest); border-radius: 6px;"></div>
+          </div>
+          <div class="numeric-value" style="font-size: 11px; color: var(--color-text-muted); margin-top: 4px; text-align: right;">{{ pct_room }}% of total billing</div>
+        </div>
+
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px;">
+            <strong style="color: #b45309;">Dining &amp; Room Service (F&amp;B)</strong>
+            <span class="currency-value numeric-value" style="font-weight: 700;">{{ metrics.dining_revenue_fmt }}</span>
+          </div>
+          {% set pct_dining = ((metrics.dining_revenue / total_stream) * 100)|round(1) %}
+          <div style="height: 12px; border-radius: 6px; background: #e5e7eb; overflow: hidden;">
+            <div style="height: 100%; width: {{ pct_dining }}%; background: #d97706; border-radius: 6px;"></div>
+          </div>
+          <div class="numeric-value" style="font-size: 11px; color: var(--color-text-muted); margin-top: 4px; text-align: right;">{{ pct_dining }}% of total billing</div>
+        </div>
+
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px;">
+            <strong style="color: #047857;">Chargeable Services &amp; Laundry</strong>
+            <span class="currency-value numeric-value" style="font-weight: 700;">{{ metrics.services_revenue_fmt }}</span>
+          </div>
+          {% set pct_services = ((metrics.services_revenue / total_stream) * 100)|round(1) %}
+          <div style="height: 12px; border-radius: 6px; background: #e5e7eb; overflow: hidden;">
+            <div style="height: 100%; width: {{ pct_services }}%; background: #047857; border-radius: 6px;"></div>
+          </div>
+          <div class="numeric-value" style="font-size: 11px; color: var(--color-text-muted); margin-top: 4px; text-align: right;">{{ pct_services }}% of total billing</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart 2: Room Fleet Fleet Occupancy Status -->
+  <div class="admin-card" style="margin-bottom: 0;">
+    <div class="admin-card-header">
+      <h3 class="admin-card-title">Room Fleet Operational Distribution</h3>
+    </div>
+    <div style="padding: 24px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+        {% for st, count in room_status_dist.items() %}
+          <div style="padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); background: #fafaf8; text-align: center;">
+            <div class="numeric-value" style="font-size: 26px; font-weight: 700; 
+                        {% if st == 'Available' %}color: #166534;
+                        {% elif st == 'Occupied' %}color: #1d4ed8;
+                        {% elif st == 'Cleaning' %}color: #854d0e;
+                        {% else %}color: #991b1b;{% endif %}">
+              {{ count }}
+            </div>
+            <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-forest); margin-top: 4px;">
+              {{ st }}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Chart 3: Payments Cleared History & Food Orders Distribution -->
+<div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px;">
+
+  <!-- Payments Over Time -->
+  <div class="admin-card">
+    <div class="admin-card-header">
+      <h3 class="admin-card-title">Payments Collected Over Time (Timeline)</h3>
+    </div>
+    <div style="padding: 20px;">
+      {% if payments_by_date %}
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          {% for pdate, amt in payments_by_date.items() %}
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #fafaf8; border-radius: 4px; border: 1px solid var(--color-border);">
+              <span class="date-value numeric-value" style="font-size: 13px; font-weight: 600; color: var(--color-forest);">{{ pdate }}</span>
+              <span class="currency-value numeric-value" style="font-size: 15px; font-weight: 700; color: #166534;">{{ amt|currency }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div style="padding: 32px; text-align: center; color: var(--color-text-muted); font-size: 12px;">No payment activity in the selected window.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Food Order Lifecycle Distribution -->
+  <div class="admin-card">
+    <div class="admin-card-header">
+      <h3 class="admin-card-title">Food Order Status Breakdown</h3>
+    </div>
+    <div style="padding: 20px;">
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        {% for st, cnt in order_status_dist.items() %}
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #fafaf8; border-radius: 4px; border: 1px solid var(--color-border);">
+            <span class="badge badge-{{ st|lower|replace(' ', '-') }}" style="font-size: 11px;">{{ st }}</span>
+            <span class="numeric-value" style="font-size: 14px; font-weight: 700; color: var(--color-forest);">{{ cnt }} orders</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+

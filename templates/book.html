@@ -1,0 +1,592 @@
+{% extends "base.html" %}
+
+{% block title %}Complete Your Reservation — RETREAT Hotel & Suites{% endblock %}
+
+{% block content %}
+<section style="padding-top: calc(var(--header-height) + 24px); padding-bottom: 70px; background: var(--color-ivory);">
+  <div class="container">
+    
+    <!-- Clean, Non-decorative Step Progress Indicator -->
+    <div class="booking-progress-bar">
+      <span class="progress-step completed" id="step-nav-1" style="cursor: pointer;" onclick="goToStep(1)">1. Stay & Room</span>
+      <span class="progress-separator">&rarr;</span>
+      <span class="progress-step completed" id="step-nav-2" style="cursor: pointer;" onclick="goToStep(2)">2. Meal Plan</span>
+      <span class="progress-separator">&rarr;</span>
+      <span class="progress-step active" id="step-nav-3" style="cursor: pointer;" onclick="goToStep(3)">3. Guest Info</span>
+      <span class="progress-separator">&rarr;</span>
+      <span class="progress-step" id="step-nav-4" style="cursor: pointer;" onclick="goToStep(4)">4. Review & Confirm</span>
+    </div>
+
+    <!-- Page Title -->
+    <div style="margin-bottom: 24px;">
+      <h1 style="font-family: var(--font-heading); font-size: var(--text-page-title); color: var(--color-forest); margin: 0 0 6px 0;">
+        Reservation & Guest Details
+      </h1>
+      <p style="font-size: var(--text-body); color: var(--color-text-muted); margin: 0;">
+        {% if logged_user %}
+          Prefilled with your registered guest profile (<strong>{{ logged_user.full_name }}</strong> &bull; {{ logged_user.email }}).
+        {% else %}
+          Please provide your details below. An account will be created to manage your reservation.
+        {% endif %}
+      </p>
+    </div>
+
+    <!-- Alert Box for Dynamic Errors -->
+    <div id="booking-alert-box" style="display: none; padding: 12px 16px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 20px;"></div>
+
+    <div style="display: grid; grid-template-columns: 1.45fr 1fr; gap: 30px; align-items: start;">
+      
+      <!-- Left Column: Step-Based Form Sections -->
+      <div>
+        
+        <!-- STEP 1: Stay Details & Room Selection -->
+        <div class="booking-card" id="card-step-1">
+          <div class="booking-card-header">
+            <h2 class="booking-card-title">Stay Details & Room Selection</h2>
+            <span style="font-size: 12px; color: var(--color-text-muted);">
+              Room: <strong id="lbl-room-name" style="color: var(--color-forest);">{{ room.name }}</strong>
+            </span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="book-checkin">Check-In Date</label>
+              <input type="date" id="book-checkin" class="form-control" value="{{ check_in }}" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="book-checkout">Check-Out Date</label>
+              <input type="date" id="book-checkout" class="form-control" value="{{ check_out }}" required>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; gap: 12px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="book-room-id">Room Category</label>
+              <select id="book-room-id" class="form-select">
+                {% for r in all_rooms %}
+                <option value="{{ r.id }}" {% if r.id == room.id %}selected{% endif %}>
+                  {{ r.name }} ({{ r.price_per_night|currency }})
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="book-rooms-count">Rooms</label>
+              <select id="book-rooms-count" class="form-select">
+                {% for rc in range(1, 6) %}
+                <option value="{{ rc }}" {% if rc == rooms_count %}selected{% endif %}>{{ rc }} Room{{ 's' if rc > 1 else '' }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="book-adults">Adults</label>
+              <select id="book-adults" class="form-select">
+                {% for a in range(1, 9) %}
+                <option value="{{ a }}" {% if a == adults %}selected{% endif %}>{{ a }} Adult{{ 's' if a > 1 else '' }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="book-children">Children</label>
+              <select id="book-children" class="form-select">
+                {% for c in range(0, 5) %}
+                <option value="{{ c }}" {% if c == children %}selected{% endif %}>{{ c }} Child{{ 'ren' if c != 1 else '' }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2: Meal Plans -->
+        <div class="booking-card" id="card-step-2">
+          <div class="booking-card-header">
+            <div>
+              <h2 class="booking-card-title">Meal Plans</h2>
+              <p style="font-size: 12px; color: var(--color-text-muted); margin: 2px 0 0 0;">
+                Optional daily dining packages. Food can also be ordered à la carte during your stay.
+              </p>
+            </div>
+          </div>
+
+          <div style="display: grid; gap: 10px;">
+            {% for plan_id, plan in meal_plans.items() %}
+            <label class="meal-plan-card {% if plan.id == selected_meal_plan %}selected{% endif %}" id="meal-label-{{ plan.id }}">
+              <input type="radio" name="meal_plan_radio" value="{{ plan.id }}" {% if plan.id == selected_meal_plan %}checked{% endif %} onchange="onMealPlanRadioChange()">
+              <div style="flex-grow: 1;">
+                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                  <span class="meal-plan-title">{{ plan.name }}</span>
+                  <span class="meal-plan-rate">
+                    {% if plan.rate_per_adult_per_night == 0 %}Included (₹0){% else %}+₹{{ plan.rate_per_adult_per_night }} / adult / night{% endif %}
+                  </span>
+                </div>
+                <div class="meal-plan-desc">{{ plan.description }}</div>
+              </div>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- STEP 3: Guest Information Form -->
+        <div class="booking-card" id="card-step-3">
+          <div class="booking-card-header">
+            <div>
+              <h2 class="booking-card-title">Guest Information</h2>
+              <p style="font-size: 12px; color: var(--color-text-muted); margin: 2px 0 0 0;">
+                Details will be recorded for your arrival check-in.
+              </p>
+            </div>
+            {% if not logged_user %}
+            <a href="{{ url_for('login') }}" style="font-size: 11px; color: var(--color-gold-dark); font-weight: 600;">
+              Already have an account? Sign In
+            </a>
+            {% endif %}
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="guest-name">Guest Full Name <span style="color: #b91c1c;">*</span></label>
+              <input type="text" id="guest-name" class="form-control" required placeholder="e.g. Vikramaditya Singhania" value="{{ logged_user.full_name if logged_user else '' }}">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="guest-email">Email Address <span style="color: #b91c1c;">*</span></label>
+              <input type="email" id="guest-email" class="form-control" required placeholder="name@example.com" value="{{ logged_user.email if logged_user else '' }}">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="guest-phone">Contact Phone</label>
+              <input type="tel" id="guest-phone" class="form-control" placeholder="+91 98200 00000" value="{{ logged_user.phone if logged_user else '' }}">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="guest-arrival">Estimated Arrival Time</label>
+              <select id="guest-arrival" class="form-select">
+                <option value="Standard (2:00 PM - 6:00 PM)">Standard (2:00 PM – 6:00 PM)</option>
+                <option value="Evening (6:00 PM - 10:00 PM)">Evening (6:00 PM – 10:00 PM)</option>
+                <option value="Late Night (After 10:00 PM)">Late Night (After 10:00 PM)</option>
+                <option value="Early Morning Check-in">Early Morning Check-in</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Structured Optional Special Requests -->
+          <div style="background: var(--color-ivory-surface); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 14px;">
+            <label class="form-label" style="margin-bottom: 8px;">Special Preferences & Requests (Optional)</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px; margin-bottom: 10px;">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="req-early-checkin" value="Early Check-in requested">
+                <span>Early Check-in (Subject to availability)</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="req-late-checkout" value="Late Check-out requested">
+                <span>Late Check-out (Subject to availability)</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="req-extra-bedding" value="Extra bedding requested">
+                <span>Extra Bedding / Linen</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="req-accessibility" value="Accessible room requested">
+                <span>Accessibility Requirements</span>
+              </label>
+            </div>
+            
+            <textarea id="guest-requests" class="form-control" rows="2" placeholder="Additional notes: dietary preferences, quiet room, or airport cab coordination..."></textarea>
+            <div style="font-size: 11px; color: var(--color-text-muted); margin-top: 6px;">
+              * Note: Special requests are subject to hotel availability upon arrival and cannot be guaranteed in advance.
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 4: Complete Reservation Review Section -->
+        <div class="booking-card" id="card-step-4" style="background: var(--color-gold-soft); border-color: var(--color-gold-border);">
+          <div class="booking-card-header">
+            <h2 class="booking-card-title">Review Reservation Details</h2>
+            <span style="font-size: 11px; color: var(--color-forest-muted); font-weight: 600;">Check before confirmation</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 13px; margin-bottom: 16px;">
+            <div>
+              <span style="font-size: 11px; text-transform: uppercase; color: var(--color-text-muted); display: block; font-weight: 600;">Room Details</span>
+              <strong id="rev-room-name" style="color: var(--color-forest);">{{ room.name }}</strong>
+              <div id="rev-room-config" style="color: var(--color-text-secondary); margin-top: 2px;">1 room · Max 2 guests</div>
+            </div>
+
+            <div>
+              <span style="font-size: 11px; text-transform: uppercase; color: var(--color-text-muted); display: block; font-weight: 600;">Dates & Duration</span>
+              <div id="rev-dates" style="color: var(--color-forest); font-weight: 600;">-</div>
+              <div id="rev-nights" style="color: var(--color-text-secondary); margin-top: 2px;">-</div>
+            </div>
+
+            <div>
+              <span style="font-size: 11px; text-transform: uppercase; color: var(--color-text-muted); display: block; font-weight: 600;">Primary Guest</span>
+              <div id="rev-guest-name" style="font-weight: 600; color: var(--color-forest);">-</div>
+              <div id="rev-guest-contact" style="color: var(--color-text-secondary); font-size: 12px;">-</div>
+            </div>
+
+            <div>
+              <span style="font-size: 11px; text-transform: uppercase; color: var(--color-text-muted); display: block; font-weight: 600;">Occupancy & Dining</span>
+              <div id="rev-occupancy" style="font-weight: 600; color: var(--color-forest);">-</div>
+              <div id="rev-meal-plan" style="color: var(--color-text-secondary); font-size: 12px;">-</div>
+            </div>
+          </div>
+
+          <div id="rev-special-notes-box" style="font-size: 12px; color: var(--color-text-secondary); background: #fff; padding: 8px 12px; border-radius: 4px; border: 1px solid var(--color-border-subtle); display: none;">
+            <strong>Special Requests:</strong> <span id="rev-special-notes">None</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Booking Summary -->
+      <div>
+        <div class="summary-card">
+          
+          <div class="summary-header">
+            <span class="summary-pretitle">Booking Summary</span>
+            <h2 id="summary-room-title" class="summary-room-title">
+              {{ room.name }}
+            </h2>
+            <div id="summary-date-line" class="summary-date-line">
+              Calculating stay dates...
+            </div>
+          </div>
+
+          <!-- Price Breakdown -->
+          <div style="margin-bottom: 16px;">
+            <div class="summary-row">
+              <span class="label" id="lbl-base-charge-title">Base Room Charges:</span>
+              <span class="value" id="val-base-charges">...</span>
+            </div>
+
+            <div class="summary-row" id="row-extra-guests" style="display: none;">
+              <span class="label" id="lbl-extra-guests-title">Additional Guest Charges:</span>
+              <span class="value" id="val-extra-charges">₹0</span>
+            </div>
+
+            <div class="summary-row">
+              <span class="label" id="lbl-meal-title">Meal Plan Charges:</span>
+              <span class="value" id="val-meal-charges">₹0</span>
+            </div>
+
+            <div class="summary-row" id="row-discount" style="display: none; color: #0E6245;">
+              <span class="label" style="color: inherit;">Discount Applied:</span>
+              <span class="value" id="val-discount" style="color: inherit;">-₹0</span>
+            </div>
+
+            <!-- Total Amount -->
+            <div class="summary-total-row">
+              <span class="summary-total-label">Total Booking Amount</span>
+              <span id="val-total-amount" class="summary-total-value">...</span>
+            </div>
+            
+            <div style="font-size: 11px; color: var(--color-text-muted); line-height: 1.4; margin-top: 6px;">
+              Includes room tariff & meal package. Payment will be settled upon check-in. Free cancellation up to 48 hours prior to arrival.
+            </div>
+          </div>
+
+          <!-- Availability Status Indicator -->
+          <div id="availability-status-box" class="status-pill available">
+            <span id="availability-text">Checking live inventory...</span>
+          </div>
+
+          <!-- Action Button -->
+          <button type="button" id="btn-confirm-booking" class="btn btn-gold" style="width: 100%;" onclick="submitBookingReservation()">
+            Confirm Reservation
+          </button>
+
+          <div style="display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; color: var(--color-text-muted); margin-top: 14px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>Linked to Customer ID &bull; Instant Confirmation</span>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let isCurrentlyAvailable = true;
+
+// Format dates cleanly: "1 night · 6 Nov 2026 – 7 Nov 2026 · 1 room"
+function formatStayText(nights, checkInStr, checkOutStr, roomsCount) {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  
+  function parseDateFormatted(ds) {
+    if (!ds) return '';
+    const parts = ds.split('-');
+    if (parts.length === 3) {
+      const year = parts[0];
+      const monthIdx = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      return `${day} ${months[monthIdx]} ${year}`;
+    }
+    return ds;
+  }
+
+  const inFormatted = parseDateFormatted(checkInStr);
+  const outFormatted = parseDateFormatted(checkOutStr);
+  const nightsLabel = nights === 1 ? '1 night' : `${nights} nights`;
+  const roomsLabel = roomsCount === 1 ? '1 room' : `${roomsCount} rooms`;
+
+  return `${nightsLabel} · ${inFormatted} – ${outFormatted} · ${roomsLabel}`;
+}
+
+function getSelectedMealPlan() {
+  const radios = document.getElementsByName('meal_plan_radio');
+  for (let r of radios) {
+    if (r.checked) return r.value;
+  }
+  return 'room_only';
+}
+
+function onMealPlanRadioChange() {
+  const selected = getSelectedMealPlan();
+  document.querySelectorAll('.meal-plan-card').forEach(card => {
+    card.classList.remove('selected');
+  });
+  const activeLabel = document.getElementById('meal-label-' + selected);
+  if (activeLabel) activeLabel.classList.add('selected');
+  updateBookingCalculation();
+}
+
+function getCollectedSpecialRequests() {
+  const parts = [];
+  ['req-early-checkin', 'req-late-checkout', 'req-extra-bedding', 'req-accessibility'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.checked) parts.push(el.value);
+  });
+  const custom = document.getElementById('guest-requests').value.trim();
+  if (custom) parts.push(custom);
+  const arrival = document.getElementById('guest-arrival').value;
+  parts.push(`Arrival: ${arrival}`);
+  return parts.join('; ');
+}
+
+function syncReviewCard(pricing) {
+  const roomSelect = document.getElementById('book-room-id');
+  const roomName = roomSelect.options[roomSelect.selectedIndex].text.split('(')[0].trim();
+  const checkIn = document.getElementById('book-checkin').value;
+  const checkOut = document.getElementById('book-checkout').value;
+  const roomsCount = document.getElementById('book-rooms-count').value;
+  const adults = document.getElementById('book-adults').value;
+  const children = document.getElementById('book-children').value;
+  
+  const gName = document.getElementById('guest-name').value.trim() || '(Pending name)';
+  const gEmail = document.getElementById('guest-email').value.trim() || '(Pending email)';
+  const gPhone = document.getElementById('guest-phone').value.trim() || 'No phone';
+
+  document.getElementById('rev-room-name').textContent = roomName;
+  document.getElementById('rev-room-config').textContent = `${roomsCount} room(s) booked`;
+  document.getElementById('rev-dates').textContent = `${checkIn} to ${checkOut}`;
+  document.getElementById('rev-nights').textContent = `${pricing.nights} night(s) stay`;
+  document.getElementById('rev-guest-name').textContent = gName;
+  document.getElementById('rev-guest-contact').textContent = `${gEmail} · ${gPhone}`;
+  document.getElementById('rev-occupancy').textContent = `${adults} Adults, ${children} Children`;
+  document.getElementById('rev-meal-plan').textContent = pricing.meal_plan_name;
+
+  const notes = getCollectedSpecialRequests();
+  if (notes) {
+    document.getElementById('rev-special-notes-box').style.display = 'block';
+    document.getElementById('rev-special-notes').textContent = notes;
+  }
+}
+
+function updateBookingCalculation() {
+  const roomId = document.getElementById('book-room-id').value;
+  const checkIn = document.getElementById('book-checkin').value;
+  const checkOut = document.getElementById('book-checkout').value;
+  const roomsCount = parseInt(document.getElementById('book-rooms-count').value, 10);
+  const adults = parseInt(document.getElementById('book-adults').value, 10);
+  const children = parseInt(document.getElementById('book-children').value, 10);
+  const mealPlan = getSelectedMealPlan();
+
+  const alertBox = document.getElementById('booking-alert-box');
+  const btn = document.getElementById('btn-confirm-booking');
+  const statusBox = document.getElementById('availability-status-box');
+  const statusText = document.getElementById('availability-text');
+
+  fetch('/api/calculate-price', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      room_id: roomId,
+      check_in: checkIn,
+      check_out: checkOut,
+      rooms_count: roomsCount,
+      adults: adults,
+      children: children,
+      meal_plan: mealPlan
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.status === 'success') {
+      alertBox.style.display = 'none';
+      isCurrentlyAvailable = true;
+      btn.disabled = false;
+      btn.classList.remove('btn-outline-forest');
+      btn.classList.add('btn-gold');
+      btn.style.opacity = '1';
+      btn.style.cursor = 'pointer';
+
+      const p = data.pricing;
+      
+      document.getElementById('summary-date-line').textContent = formatStayText(p.nights, checkIn, checkOut, p.rooms_count);
+
+      const nText = p.nights === 1 ? '1 night' : `${p.nights} nights`;
+      const rText = p.rooms_count === 1 ? '1 room' : `${p.rooms_count} rooms`;
+      document.getElementById('lbl-base-charge-title').textContent = `Base Room Charges (${nText}, ${rText}):`;
+      document.getElementById('val-base-charges').textContent = p.base_room_charges_fmt;
+
+      if (p.extra_adults > 0) {
+        document.getElementById('row-extra-guests').style.display = 'flex';
+        const extraLabel = p.extra_adults === 1 ? '1 extra guest' : `${p.extra_adults} extra guests`;
+        document.getElementById('lbl-extra-guests-title').textContent = `Additional Guest Charges (${extraLabel}):`;
+        document.getElementById('val-extra-charges').textContent = p.additional_guest_charges_fmt;
+      } else {
+        document.getElementById('row-extra-guests').style.display = 'none';
+      }
+
+      document.getElementById('lbl-meal-title').textContent = `Meal Plan (${p.meal_plan_name}):`;
+      document.getElementById('val-meal-charges').textContent = p.meal_plan_charges_fmt;
+      document.getElementById('val-total-amount').textContent = p.total_amount_fmt;
+
+      statusBox.className = 'status-pill available';
+      const openLabel = data.available_count === 1 ? '1 room' : `${data.available_count} rooms`;
+      statusText.innerHTML = `✓ Available: ${openLabel} open in category for requested dates.`;
+
+      const roomSelect = document.getElementById('book-room-id');
+      const selectedOptionText = roomSelect.options[roomSelect.selectedIndex].text;
+      const cleanRoomName = selectedOptionText.split('(')[0].trim();
+      document.getElementById('summary-room-title').textContent = cleanRoomName;
+      document.getElementById('lbl-room-name').textContent = cleanRoomName;
+
+      // Sync reservation review card
+      syncReviewCard(p);
+    } else {
+      isCurrentlyAvailable = false;
+      btn.disabled = true;
+      btn.classList.remove('btn-gold');
+      btn.classList.add('btn-outline-forest');
+      btn.style.opacity = '0.5';
+      btn.style.cursor = 'not-allowed';
+
+      alertBox.style.display = 'block';
+      alertBox.style.background = '#FEE2E2';
+      alertBox.style.color = '#991B1B';
+      alertBox.style.border = '1px solid #FECACA';
+      alertBox.textContent = data.message;
+
+      statusBox.className = 'status-pill unavailable';
+      statusText.innerHTML = `✕ Unavailable: ${data.message}`;
+    }
+  })
+  .catch(err => {
+    console.error('Calculation error:', err);
+  });
+}
+
+function goToStep(stepNum) {
+  const cardId = `card-step-${stepNum}`;
+  const el = document.getElementById(cardId);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+// Bind live triggers
+['book-room-id', 'book-checkin', 'book-checkout', 'book-rooms-count', 'book-adults', 'book-children'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener('change', updateBookingCalculation);
+  }
+});
+
+['guest-name', 'guest-email', 'guest-phone', 'guest-arrival', 'guest-requests'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener('input', () => {
+      // update review card
+      const roomSelect = document.getElementById('book-room-id');
+      syncReviewCard({
+        nights: document.getElementById('val-base-charges').textContent ? 3 : 1,
+        meal_plan_name: getSelectedMealPlan()
+      });
+    });
+  }
+});
+
+function submitBookingReservation() {
+  if (!isCurrentlyAvailable) {
+    alert('The room is not available for the selected dates or capacity.');
+    return;
+  }
+
+  const guestName = document.getElementById('guest-name').value.trim();
+  const guestEmail = document.getElementById('guest-email').value.trim();
+  const guestPhone = document.getElementById('guest-phone').value.trim();
+
+  if (!guestName || !guestEmail) {
+    alert('Please enter your full name and valid email address under Guest Information.');
+    goToStep(3);
+    return;
+  }
+
+  const specialNotes = getCollectedSpecialRequests();
+
+  const payload = {
+    room_id: document.getElementById('book-room-id').value,
+    check_in: document.getElementById('book-checkin').value,
+    check_out: document.getElementById('book-checkout').value,
+    rooms_count: document.getElementById('book-rooms-count').value,
+    adults: document.getElementById('book-adults').value,
+    children: document.getElementById('book-children').value,
+    meal_plan: getSelectedMealPlan(),
+    guest_name: guestName,
+    guest_email: guestEmail,
+    guest_phone: guestPhone,
+    special_requests: specialNotes
+  };
+
+  const btn = document.getElementById('btn-confirm-booking');
+  btn.disabled = true;
+  btn.textContent = 'Recording Reservation...';
+
+  fetch('/api/confirm-booking', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.status === 'success') {
+      // Store in localStorage for client persistence
+      try {
+        const stored = JSON.parse(localStorage.getItem('retreat_bookings') || '[]');
+        stored.push(data.booking_code);
+        localStorage.setItem('retreat_bookings', JSON.stringify(stored));
+      } catch(e) {}
+
+      window.location.href = data.redirect_url;
+    } else {
+      btn.disabled = false;
+      btn.textContent = 'Confirm Reservation';
+      alert(data.message || 'Error completing reservation.');
+    }
+  })
+  .catch(err => {
+    btn.disabled = false;
+    btn.textContent = 'Confirm Reservation';
+    alert('Network error connecting to booking server.');
+  });
+}
+
+// Initial calculation on DOM load
+window.addEventListener('DOMContentLoaded', updateBookingCalculation);
+</script>
+{% endblock %}

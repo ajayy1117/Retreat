@@ -1,0 +1,151 @@
+{% extends "admin/base_admin.html" %}
+
+{% block page_title %}Guest Check-In Verification{% endblock %}
+
+{% block content %}
+<div style="max-width: 820px; margin: 0 auto;">
+  
+  <div style="margin-bottom: 20px;">
+    <a href="{{ url_for('admin_checkin_checkout') }}" style="font-size: 12px; color: var(--color-gold); font-weight: 600; text-decoration: none;">
+      &larr; Back to Front Desk Check-in / Check-out Desk
+    </a>
+  </div>
+
+  <div class="admin-card">
+    <div class="admin-card-header" style="background: var(--color-forest); color: #FAF8F3; padding: 22px 28px;">
+      <div>
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-gold); font-weight: 600; margin-bottom: 4px;">
+          Front Desk Operational Verification
+        </div>
+        <h2 style="font-family: var(--font-heading); font-size: 26px; margin: 0; color: #FAF8F3;">
+          Confirm Check-in for {{ booking.guest_name }}
+        </h2>
+      </div>
+      <span class="reference-code numeric-value" style="font-size: 18px; color: var(--color-gold); font-weight: 700;">
+        {{ booking.booking_code }}
+      </span>
+    </div>
+
+    <div style="padding: 28px;">
+      
+      <!-- Guest & Stay Specifications Grid -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; padding-bottom: 24px; border-bottom: 1px solid var(--color-border); margin-bottom: 24px;">
+        <div>
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--color-text-muted); font-weight: 600;">Customer Details</div>
+          <div style="font-size: 15px; font-weight: 700; color: var(--color-forest); margin-top: 2px;">{{ booking.guest_name }}</div>
+          <div style="font-size: 12px; color: var(--color-text-muted);">{{ booking.guest_email }}</div>
+          <div class="numeric-value" style="font-size: 12px; color: var(--color-text-muted);">{{ booking.guest_phone }}</div>
+        </div>
+
+        <div>
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--color-text-muted); font-weight: 600;">Reserved Category</div>
+          <div style="font-size: 15px; font-weight: 700; color: var(--color-forest); margin-top: 2px;">{{ booking.room_name }}</div>
+          <div style="font-size: 12px; color: var(--color-text-muted);">Base Cap: {{ booking.capacity_adults }} Adults &bull; Max: {{ booking.max_occupancy }}</div>
+          <div style="font-size: 12px; color: var(--color-text-muted);">Tariff: {{ booking.price_per_night|currency }} / night</div>
+        </div>
+
+        <div>
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--color-text-muted); font-weight: 600;">Stay Period &amp; Occupancy</div>
+          <div class="date-value numeric-value" style="font-size: 14px; font-weight: 700; color: var(--color-forest); margin-top: 2px;">
+            {{ booking.check_in }} &rarr; {{ booking.check_out }}
+          </div>
+          <div class="numeric-value" style="font-size: 12px; color: var(--color-text-muted);">
+            {{ booking.total_nights }} night(s) &bull; {{ booking.guests_adults }} Adults, {{ booking.guests_children }} Child
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--color-text-muted); font-weight: 600;">Payment &amp; Ledger State</div>
+          <div style="margin-top: 4px;">
+            <span class="badge badge-{{ booking.payment_status|lower|replace(' ', '') }}" style="font-size: 11px; padding: 3px 8px;">
+              {{ booking.payment_status }}
+            </span>
+          </div>
+          <div style="font-size: 12px; color: var(--color-text-muted); margin-top: 4px;">
+            Total Package: <strong class="currency-value numeric-value" style="color: var(--color-forest);">{{ booking.total_price|currency }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Room Selection & Verification Form -->
+      <form method="POST" action="{{ url_for('admin_checkin_flow', booking_id=booking.id) }}">
+        
+        <div style="margin-bottom: 24px;">
+          <h3 style="font-family: var(--font-heading); font-size: 20px; color: var(--color-forest); margin: 0 0 8px;">
+            Select Physical Room Assignment
+          </h3>
+          <p style="font-size: 13px; color: var(--color-text-muted); margin: 0 0 16px;">
+            The room inventory engine checks dates, capacity, maintenance restrictions, and existing occupancy before permitting assignment.
+          </p>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px;">
+            {% for item in eligible_rooms %}
+              {% set r = item.room %}
+              <label style="border: 1px solid {% if item.available %}var(--color-border){% else %}#fca5a5{% endif %}; border-radius: var(--radius-sm); padding: 14px; cursor: {% if item.available %}pointer{% else %}not-allowed{% endif %}; background: {% if not item.available %}#fef2f2{% elif booking.assigned_room_number == r.room_number %}var(--color-forest-tint){% else %}#ffffff{% endif %}; display: block; position: relative;">
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <span class="reference-code numeric-value" style="font-size: 16px; font-weight: 700; color: var(--color-forest);">
+                    Room {{ r.room_number }}
+                  </span>
+                  <input type="radio" name="assigned_room_number" value="{{ r.room_number }}" {% if not item.available %}disabled{% endif %} {% if booking.assigned_room_number == r.room_number or (not booking.assigned_room_number and loop.first and item.available) %}checked{% endif %}>
+                </div>
+
+                <div style="font-size: 11px; color: var(--color-text-muted);">
+                  Floor {{ r.floor }} &bull; {{ booking.room_name }}
+                </div>
+
+                <div style="margin-top: 8px;">
+                  {% if item.available %}
+                    <span style="font-size: 11px; color: #166534; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                      ✓ Ready for Check-in
+                    </span>
+                  {% else %}
+                    <span style="font-size: 11px; color: #991b1b; font-weight: 600; display: block;">
+                      ✕ Unavailable
+                    </span>
+                    <span style="font-size: 10px; color: #b91c1c; display: block; margin-top: 2px;">
+                      {{ item.reason }}
+                    </span>
+                  {% endif %}
+                </div>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Special Requests Reminder -->
+        {% if booking.special_requests %}
+          <div style="background: #fafaf8; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 14px 18px; margin-bottom: 24px; font-size: 12px;">
+            <strong style="color: var(--color-forest);">Guest Special Instructions:</strong>
+            <span style="color: var(--color-text-muted); margin-left: 6px;">{{ booking.special_requests }}</span>
+          </div>
+        {% endif %}
+
+        <!-- Pre-check checklist verification -->
+        <div style="background: var(--color-forest-tint); border-radius: var(--radius-sm); padding: 16px 20px; margin-bottom: 24px; font-size: 12px; color: var(--color-forest);">
+          <strong style="display: block; margin-bottom: 6px; font-size: 13px;">Front Desk Check-in Checklist:</strong>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div>&bull; Government photo ID verified for adult guests</div>
+            <div>&bull; Room keycard issued &amp; safe code reset</div>
+            <div>&bull; Wi-Fi &amp; dining privileges explained</div>
+            <div>&bull; In-room dining &amp; service requests active</div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 12px; align-items: center;">
+          <a href="{{ url_for('admin_checkin_checkout') }}" class="admin-btn admin-btn-outline" style="height: 40px; padding: 0 18px; font-size: 12px;">
+            Cancel
+          </a>
+          <button type="submit" class="admin-btn admin-btn-forest" style="height: 40px; padding: 0 24px; font-size: 12px; font-weight: 600;">
+            Confirm Check-In &amp; Issue Room
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+

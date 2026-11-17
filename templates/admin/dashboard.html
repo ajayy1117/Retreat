@@ -1,0 +1,406 @@
+{% extends "admin/base_admin.html" %}
+
+{% block page_title %}Hotel Operations Overview{% endblock %}
+
+{% block content %}
+<!-- Live Operational KPI Metric Cards -->
+<div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
+  
+  <!-- Total Reservations -->
+  <div class="kpi-card" style="padding: 18px 20px;">
+    <div>
+      <div class="kpi-title" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Total Reservations</div>
+      <div class="kpi-value numeric-value" style="font-size: 26px; font-weight: 700; color: var(--color-forest); margin: 4px 0;">
+        {{ stats.total_reservations }}
+      </div>
+      <div class="kpi-change" style="font-size: 11px; color: var(--color-text-muted);">
+        Active confirmed &amp; checked-in folios
+      </div>
+    </div>
+    <div class="kpi-icon-box" style="background: var(--color-forest-tint); color: var(--color-forest);">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+    </div>
+  </div>
+
+  <!-- Currently Occupied Rooms -->
+  <div class="kpi-card" style="padding: 18px 20px;">
+    <div>
+      <div class="kpi-title" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Currently Occupied</div>
+      <div class="kpi-value numeric-value" style="font-size: 26px; font-weight: 700; color: #1d4ed8; margin: 4px 0;">
+        {{ stats.occupied_rooms_count }} <span style="font-size: 13px; font-weight: 500; color: var(--color-text-muted);">/ {{ physical_rooms|length }} rooms</span>
+      </div>
+      <div class="kpi-change" style="font-size: 11px; color: #1d4ed8; font-weight: 600;">
+        {{ stats.occupancy_rate_fmt }} live occupancy rate
+      </div>
+    </div>
+    <div class="kpi-icon-box" style="background: #dbeafe; color: #1d4ed8;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+    </div>
+  </div>
+
+  <!-- Available Rooms -->
+  <div class="kpi-card" style="padding: 18px 20px;">
+    <div>
+      <div class="kpi-title" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Available Rooms</div>
+      <div class="kpi-value numeric-value" style="font-size: 26px; font-weight: 700; color: #166534; margin: 4px 0;">
+        {{ stats.available_rooms_count }}
+      </div>
+      <div class="kpi-change" style="font-size: 11px; color: var(--color-text-muted);">
+        {{ stats.cleaning_rooms_count }} in cleaning &bull; {{ stats.maintenance_rooms_count }} in maintenance
+      </div>
+    </div>
+    <div class="kpi-icon-box" style="background: #dcfce7; color: #166534;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    </div>
+  </div>
+
+  <!-- Today's Check-ins & Check-outs -->
+  <div class="kpi-card" style="padding: 18px 20px;">
+    <div>
+      <div class="kpi-title" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Today's Arrivals / Departures</div>
+      <div class="kpi-value numeric-value" style="font-size: 24px; font-weight: 700; color: var(--color-forest); margin: 4px 0;">
+        <span style="color: #047857;">{{ stats.today_checkins }} In</span> &bull; <span style="color: #b45309;">{{ stats.today_checkouts }} Out</span>
+      </div>
+      <div class="kpi-change">
+        <a href="{{ url_for('admin_checkin_checkout') }}" style="font-size: 11px; color: var(--color-gold); font-weight: 600; text-decoration: none;">
+          Open Front Desk Desk &rarr;
+        </a>
+      </div>
+    </div>
+    <div class="kpi-icon-box" style="background: var(--color-gold-soft); color: var(--color-gold-dark);">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+    </div>
+  </div>
+
+  <!-- Payments Collected -->
+  <div class="kpi-card" style="padding: 18px 20px;">
+    <div>
+      <div class="kpi-title" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Payments Collected</div>
+      <div class="kpi-value numeric-value currency-value" style="font-size: 24px; font-weight: 700; color: var(--color-forest); margin: 4px 0;">
+        {{ stats.total_payments_collected_fmt }}
+      </div>
+      <div class="kpi-change" style="font-size: 11px; color: #166534; font-weight: 600;">
+        Sum of cleared transactions
+      </div>
+    </div>
+    <div class="kpi-icon-box" style="background: var(--color-forest-tint); color: var(--color-forest);">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><text x="6" y="18" font-size="18" font-weight="bold" fill="currentColor">₹</text></svg>
+    </div>
+  </div>
+
+  <!-- Outstanding Guest Balances -->
+  <div class="kpi-card" style="padding: 18px 20px;">
+    <div>
+      <div class="kpi-title" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Outstanding Balances</div>
+      <div class="kpi-value numeric-value currency-value" style="font-size: 24px; font-weight: 700; color: #b91c1c; margin: 4px 0;">
+        {{ stats.total_outstanding_balances_fmt }}
+      </div>
+      <div class="kpi-change" style="font-size: 11px; color: #b91c1c; font-weight: 600;">
+        Uncollected folio receivables
+      </div>
+    </div>
+    <div class="kpi-icon-box" style="background: #fee2e2; color: #b91c1c;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+    </div>
+  </div>
+
+  <!-- Pending Food Orders -->
+  <div class="kpi-card" style="padding: 18px 20px;">
+    <div>
+      <div class="kpi-title" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Pending Food Orders</div>
+      <div class="kpi-value numeric-value" style="font-size: 26px; font-weight: 700; color: #d97706; margin: 4px 0;">
+        {{ stats.pending_food_orders }}
+      </div>
+      <div class="kpi-change">
+        <a href="{{ url_for('admin_food_orders') }}" style="font-size: 11px; color: var(--color-gold); font-weight: 600; text-decoration: none;">
+          Kitchen dispatch &rarr;
+        </a>
+      </div>
+    </div>
+    <div class="kpi-icon-box" style="background: #fef3c7; color: #d97706;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path></svg>
+    </div>
+  </div>
+
+  <!-- Pending Service Requests -->
+  <div class="kpi-card" style="padding: 18px 20px;">
+    <div>
+      <div class="kpi-title" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Active Service Requests</div>
+      <div class="kpi-value numeric-value" style="font-size: 26px; font-weight: 700; color: var(--color-forest); margin: 4px 0;">
+        {{ stats.pending_service_requests }}
+      </div>
+      <div class="kpi-change">
+        <a href="{{ url_for('admin_service_requests') }}" style="font-size: 11px; color: var(--color-gold); font-weight: 600; text-decoration: none;">
+          Housekeeping &amp; Laundry queue &rarr;
+        </a>
+      </div>
+    </div>
+    <div class="kpi-icon-box" style="background: var(--color-forest-tint); color: var(--color-forest);">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+    </div>
+  </div>
+
+</div>
+
+<!-- Quick Front Desk Actions Row -->
+<div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 18px 24px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+  <div style="display: flex; align-items: center; gap: 12px;">
+    <div style="width: 10px; height: 10px; border-radius: 50%; background: #22c55e;"></div>
+    <div>
+      <strong style="color: var(--color-forest); font-size: 14px;">Live Operations Status</strong>
+      <span style="font-size: 12px; color: var(--color-text-muted); margin-left: 8px;">
+        ADR: <strong class="numeric-value" style="color: var(--color-forest);">{{ stats.adr_fmt }}</strong> &bull; 
+        RevPAR: <strong class="numeric-value" style="color: var(--color-forest);">{{ stats.revpar_fmt }}</strong> &bull; 
+        Recognized Room Rev: <strong class="numeric-value" style="color: var(--color-forest);">{{ stats.room_revenue_fmt }}</strong>
+      </span>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+    <a href="{{ url_for('admin_checkin_checkout') }}" class="admin-btn admin-btn-forest" style="font-size: 11px; height: 34px; padding: 0 14px;">
+      Front Desk Check-in / Check-out
+    </a>
+    <a href="{{ url_for('admin_rooms') }}" class="admin-btn admin-btn-outline" style="font-size: 11px; height: 34px; padding: 0 14px;">
+      Physical Room Fleet
+    </a>
+    <a href="{{ url_for('admin_revenue_analytics') }}" class="admin-btn admin-btn-gold" style="font-size: 11px; height: 34px; padding: 0 14px;">
+      Revenue Analytics
+    </a>
+  </div>
+</div>
+
+<!-- Two-Column Operational Layout: Recent Bookings & Room Fleet Snapshot -->
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px;">
+
+  <!-- Recent Bookings Table -->
+  <div class="admin-card" style="margin-bottom: 0;">
+    <div class="admin-card-header">
+      <div>
+        <h3 class="admin-card-title" style="margin-bottom: 2px;">Recent Guest Bookings &amp; Balances</h3>
+        <span style="font-size: 12px; color: var(--color-text-muted);">Real-time guest folios and assigned rooms</span>
+      </div>
+      <a href="{{ url_for('admin_bookings') }}" class="admin-btn admin-btn-outline" style="font-size: 11px; height: 32px;">View All Reservations</a>
+    </div>
+
+    <div class="table-responsive">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Booking Ref</th>
+            <th>Guest Details</th>
+            <th>Room &amp; Assigned</th>
+            <th>Stay Period</th>
+            <th>Total Charges</th>
+            <th>Outstanding</th>
+            <th>Status</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in bookings %}
+          <tr>
+            <td>
+              <a href="{{ url_for('admin_expenses', booking_id=b.id) }}" class="reference-code numeric-value" style="color: var(--color-forest); font-weight: 700; text-decoration: none;">
+                {{ b.booking_code }}
+              </a>
+            </td>
+            <td>
+              <div style="font-weight: 600; color: var(--color-forest);">{{ b.guest_name }}</div>
+              <div class="numeric-value" style="font-size: 11px; color: var(--color-text-muted);">{{ b.guest_phone }}</div>
+            </td>
+            <td>
+              <div style="font-size: 12px; font-weight: 500;">{{ b.room_name }}</div>
+              {% if b.assigned_room_number %}
+                <span class="badge" style="background: var(--color-forest-tint); color: var(--color-forest); font-size: 10px; font-weight: 700;">
+                  Room {{ b.assigned_room_number }}
+                </span>
+              {% else %}
+                <span style="font-size: 11px; color: #d97706; font-style: italic;">Unassigned</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="date-value numeric-value" style="font-size: 12px;">{{ b.check_in }} &rarr; {{ b.check_out }}</div>
+              <div class="numeric-value" style="font-size: 11px; color: var(--color-text-muted);">{{ b.total_nights }} night(s)</div>
+            </td>
+            <td>
+              <strong class="currency-value numeric-value" style="color: var(--color-forest);">
+                {{ b.financials.total_charges_formatted }}
+              </strong>
+            </td>
+            <td>
+              {% if b.financials.outstanding_balance > 0 %}
+                <span class="currency-value numeric-value" style="font-weight: 700; color: #b91c1c;">
+                  {{ b.financials.outstanding_balance_formatted }}
+                </span>
+              {% else %}
+                <span class="numeric-value" style="font-size: 11px; color: #166534; font-weight: 600;">✓ Settled</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge badge-{{ b.status|lower|replace(' ', '') }}" style="font-size: 10px;">
+                {{ b.status }}
+              </span>
+            </td>
+            <td style="text-align: right;">
+              <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                {% if b.status == 'Confirmed' %}
+                  <a href="{{ url_for('admin_checkin_flow', booking_id=b.id) }}" class="admin-btn admin-btn-forest" style="font-size: 10px; height: 26px; padding: 0 8px;">
+                    Check In
+                  </a>
+                {% elif b.status == 'Checked In' %}
+                  <a href="{{ url_for('admin_checkout_flow', booking_id=b.id) }}" class="admin-btn admin-btn-gold" style="font-size: 10px; height: 26px; padding: 0 8px;">
+                    Check Out
+                  </a>
+                {% else %}
+                  <a href="{{ url_for('admin_expenses', booking_id=b.id) }}" class="admin-btn admin-btn-outline" style="font-size: 10px; height: 26px; padding: 0 8px;">
+                    Folio
+                  </a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Physical Room Fleet Quick Visual Status -->
+  <div class="admin-card" style="margin-bottom: 0;">
+    <div class="admin-card-header">
+      <div>
+        <h3 class="admin-card-title" style="margin-bottom: 2px;">Room Fleet Grid</h3>
+        <span style="font-size: 12px; color: var(--color-text-muted);">26 Rooms across 4 floors</span>
+      </div>
+      <a href="{{ url_for('admin_rooms') }}" class="admin-btn admin-btn-outline" style="font-size: 11px; height: 32px;">Manage</a>
+    </div>
+
+    <div style="padding: 16px; max-height: 480px; overflow-y: auto;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px;">
+        {% for pr in physical_rooms %}
+          <div style="border-radius: 4px; padding: 8px 4px; text-align: center; border: 1px solid var(--color-border);
+                      {% if pr.operational_status == 'Occupied' %}
+                        background: #dbeafe; border-color: #93c5fd; color: #1e40af;
+                      {% elif pr.operational_status == 'Available' %}
+                        background: #dcfce7; border-color: #86efac; color: #166534;
+                      {% elif pr.operational_status == 'Cleaning' %}
+                        background: #fef9c3; border-color: #fde047; color: #854d0e;
+                      {% else %}
+                        background: #fee2e2; border-color: #fca5a5; color: #991b1b;
+                      {% endif %}">
+            <div class="reference-code numeric-value" style="font-size: 13px; font-weight: 700;">{{ pr.room_number }}</div>
+            <div style="font-size: 9px; text-transform: uppercase; font-weight: 600; margin-top: 2px;">{{ pr.operational_status[:4] }}</div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--color-border); font-size: 11px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between;">
+        <span style="color: #166534; font-weight: 600;">● Available ({{ stats.available_rooms_count }})</span>
+        <span style="color: #1e40af; font-weight: 600;">● Occupied ({{ stats.occupied_rooms_count }})</span>
+        <span style="color: #854d0e; font-weight: 600;">● Cleaning ({{ stats.cleaning_rooms_count }})</span>
+        <span style="color: #991b1b; font-weight: 600;">● Maint ({{ stats.maintenance_rooms_count }})</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Recent Room Service Orders & Service Requests Grid -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+
+  <!-- Room Service Orders -->
+  <div class="admin-card">
+    <div class="admin-card-header">
+      <div>
+        <h3 class="admin-card-title" style="margin-bottom: 2px;">Recent Food &amp; Dining Orders</h3>
+        <span style="font-size: 12px; color: var(--color-text-muted);">Lifecycle progress and billing status</span>
+      </div>
+      <a href="{{ url_for('admin_food_orders') }}" class="admin-btn admin-btn-outline" style="font-size: 11px; height: 32px;">Manage Orders</a>
+    </div>
+
+    <div style="padding: 16px;">
+      {% if recent_orders %}
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          {% for ord in recent_orders %}
+            <div style="padding: 12px; border-radius: 4px; border: 1px solid var(--color-border); background: #fafaf8; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <strong class="reference-code numeric-value" style="font-size: 13px; color: var(--color-forest);">{{ ord.order_ref }}</strong>
+                  <span class="badge badge-{{ ord.order_status|lower|replace(' ', '-') }}" style="font-size: 10px; padding: 2px 6px;">
+                    {{ ord.order_status }}
+                  </span>
+                </div>
+                <div style="font-size: 11px; color: var(--color-text-muted); margin-top: 2px;">
+                  {{ ord.guest_name }} &bull; {{ ord.room_name }} {% if ord.assigned_room_number %}(Room {{ ord.assigned_room_number }}){% endif %}
+                </div>
+              </div>
+              <div style="text-align: right;">
+                <div class="currency-value numeric-value" style="font-size: 14px; font-weight: 700; color: var(--color-forest);">
+                  {{ ord.total_amount|currency }}
+                </div>
+                <div class="date-value numeric-value" style="font-size: 10px; color: var(--color-text-muted);">
+                  {{ ord.order_date }}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div style="text-align: center; padding: 24px; color: var(--color-text-muted); font-size: 12px;">No active room service orders.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Guest Service Requests -->
+  <div class="admin-card">
+    <div class="admin-card-header">
+      <div>
+        <h3 class="admin-card-title" style="margin-bottom: 2px;">Live Guest Service Requests</h3>
+        <span style="font-size: 12px; color: var(--color-text-muted);">Housekeeping, amenities, laundry &amp; maintenance</span>
+      </div>
+      <a href="{{ url_for('admin_service_requests') }}" class="admin-btn admin-btn-outline" style="font-size: 11px; height: 32px;">View Requests</a>
+    </div>
+
+    <div style="padding: 16px;">
+      {% if recent_requests %}
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          {% for req in recent_requests %}
+            <div style="padding: 12px; border-radius: 4px; border: 1px solid var(--color-border); background: #fafaf8; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <strong class="reference-code numeric-value" style="font-size: 13px; color: var(--color-forest);">{{ req.request_ref }}</strong>
+                  <span class="badge badge-{{ req.status|lower|replace(' ', '-') }}" style="font-size: 10px; padding: 2px 6px;">
+                    {{ req.status }}
+                  </span>
+                  <span style="font-size: 10px; font-weight: 600; color: var(--color-gold-dark); background: var(--color-gold-soft); padding: 1px 6px; border-radius: 3px;">
+                    {{ req.request_type }}
+                  </span>
+                </div>
+                <div style="font-size: 11px; color: var(--color-text-dark); margin-top: 4px;">
+                  {{ req.description }}
+                </div>
+                <div style="font-size: 10px; color: var(--color-text-muted);">
+                  Guest: {{ req.guest_name }} {% if req.room_number %}&bull; Room {{ req.room_number }}{% endif %}
+                </div>
+              </div>
+              <div style="text-align: right;">
+                {% if req.is_chargeable %}
+                  <div class="currency-value numeric-value" style="font-size: 13px; font-weight: 700; color: #b91c1c;">
+                    +{{ req.charge_amount|currency }}
+                  </div>
+                  <div style="font-size: 9px; color: var(--color-text-muted); text-transform: uppercase;">Chargeable</div>
+                {% else %}
+                  <div style="font-size: 11px; color: #166534; font-weight: 600;">Complimentary</div>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div style="text-align: center; padding: 24px; color: var(--color-text-muted); font-size: 12px;">No active service requests.</div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

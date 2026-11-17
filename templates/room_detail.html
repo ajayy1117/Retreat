@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}{{ room.name }} — Room Details & Booking | RETREAT{% endblock %}
+
+{% block content %}
+<section style="padding-top: 96px; background: var(--warm-ivory);">
+  <div class="container" style="padding-top: 16px; padding-bottom: 50px;">
+    <!-- Breadcrumb -->
+    <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 20px;">
+      <a href="{{ url_for('home') }}">Home</a> &nbsp;/&nbsp; <a href="{{ url_for('rooms_catalog') }}">Rooms & Suites</a> &nbsp;/&nbsp; <span style="color: var(--forest-green); font-weight: 600;">{{ room.name }}</span>
+    </div>
+
+    <!-- Main Grid: Gallery & Detailed Specs vs Live Booking Widget -->
+    <div style="display: grid; grid-template-columns: 1.35fr 1fr; gap: 36px; margin-bottom: 40px; align-items: start;">
+      
+      <!-- Left Column: Gallery, Specs & Policies -->
+      <div>
+        <div style="border-radius: var(--radius-md); overflow: hidden; height: 420px; box-shadow: var(--shadow-sm); margin-bottom: 14px; border: 1px solid var(--ivory-border); position: relative;">
+          <img src="{{ room.image_url }}" alt="{{ room.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+          <div style="position: absolute; top: 16px; left: 16px; background: rgba(12, 52, 39, 0.9); color: var(--champagne-gold); padding: 5px 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; border-radius: 4px;">
+            {{ room.category }}
+          </div>
+          {% if available_count <= 2 and available_count > 0 %}
+          <div style="position: absolute; bottom: 16px; left: 16px; background: rgba(180, 83, 9, 0.95); color: #fff; padding: 5px 12px; font-size: 11px; font-weight: 600; border-radius: 4px;">
+            Fast Booking: Only {{ available_count }} room(s) remaining for selected dates
+          </div>
+          {% endif %}
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 28px;">
+          <img src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80" alt="Clean Bathroom" style="height: 105px; width: 100%; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--ivory-border);">
+          <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80" alt="Work Desk" style="height: 105px; width: 100%; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--ivory-border);">
+          <img src="https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=600&q=80" alt="Comfortable Bedding" style="height: 105px; width: 100%; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--ivory-border);">
+        </div>
+
+        <h2 style="font-family: var(--font-primary-heading); font-size: 26px; color: var(--forest-dark); margin-bottom: 12px;">Room Overview</h2>
+        <p style="font-size: var(--text-room-desc); color: var(--text-muted); line-height: 1.7; margin-bottom: 24px;">
+          {{ room.description }}
+        </p>
+
+        <!-- Room Specs Card -->
+        <div style="background: #ffffff; border: 1px solid var(--ivory-border); border-radius: var(--radius-md); padding: 20px; margin-bottom: 28px;">
+          <h3 style="font-family: var(--font-primary-heading); font-size: 20px; color: var(--forest-dark); margin-bottom: 14px;">Room Specifications</h3>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; font-size: 13px;">
+            <div>
+              <span style="color: var(--text-muted); display: block; font-size: var(--text-label); text-transform: uppercase; font-weight: 600;">Room Area</span>
+              <strong>{{ room.size_sqft }} sq ft ({{ (room.size_sqft * 0.0929)|round|int }} m²)</strong>
+            </div>
+            <div>
+              <span style="color: var(--text-muted); display: block; font-size: var(--text-label); text-transform: uppercase; font-weight: 600;">Bed Configuration</span>
+              <strong>{{ room.bed_type }}</strong>
+            </div>
+            <div>
+              <span style="color: var(--text-muted); display: block; font-size: var(--text-label); text-transform: uppercase; font-weight: 600;">Base Occupancy</span>
+              <strong>{{ room.capacity_adults }} Adults</strong>
+            </div>
+            <div>
+              <span style="color: var(--text-muted); display: block; font-size: var(--text-label); text-transform: uppercase; font-weight: 600;">Maximum Occupancy</span>
+              <strong>Up to {{ room.max_occupancy or room.capacity_adults }} Guests</strong>
+            </div>
+            <div>
+              <span style="color: var(--text-muted); display: block; font-size: var(--text-label); text-transform: uppercase; font-weight: 600;">View</span>
+              <strong>{{ room.view }}</strong>
+            </div>
+            <div>
+              <span style="color: var(--text-muted); display: block; font-size: var(--text-label); text-transform: uppercase; font-weight: 600;">Total Inventory</span>
+              <strong>{{ room.total_inventory }} Rooms in Category</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Amenities -->
+        <div style="margin-bottom: 28px;">
+          <h3 style="font-family: var(--font-primary-heading); font-size: 20px; color: var(--forest-dark); margin-bottom: 12px;">Included Room Amenities</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            {% for f in room.features.split(',') %}
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--forest-dark);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--champagne-gold)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>{{ f }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Hotel Policies Card -->
+        <div style="background: #ffffff; border: 1px solid var(--ivory-border); border-radius: var(--radius-md); padding: 20px;">
+          <h3 style="font-family: var(--font-primary-heading); font-size: 20px; color: var(--forest-dark); margin-bottom: 14px;">Hotel Policies & Information</h3>
+          <ul style="list-style: none; font-size: 13px; color: var(--text-secondary); line-height: 1.7;">
+            <li style="margin-bottom: 8px;"><strong>Check-In / Check-Out:</strong> Check-in from {{ policies.check_in_time }}, check-out until {{ policies.check_out_time }}.</li>
+            <li style="margin-bottom: 8px;"><strong>Cancellation Policy:</strong> {{ policies.cancellation_policy }}</li>
+            <li style="margin-bottom: 8px;"><strong>Additional Guest Charge:</strong> {% if room.additional_guest_charge %}₹{{ room.additional_guest_charge|int }} / extra guest / night.{% else %}No extra guest capacity available in this category.{% endif %}</li>
+            <li style="margin-bottom: 8px;"><strong>Child Policy:</strong> {{ policies.child_policy }}</li>
+            <li><strong>Identification:</strong> {{ policies.id_requirement }}</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Right Column: Interactive Booking Widget -->
+      <div style="background: #ffffff; border: 1px solid var(--gold-border); border-radius: var(--radius-md); padding: 28px; box-shadow: var(--shadow-md); position: sticky; top: calc(var(--header-height) + 20px);">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; border-bottom: 1px solid var(--ivory-border); padding-bottom: 14px;">
+          <div>
+            <span style="font-size: 11px; text-transform: uppercase; color: var(--champagne-gold); font-weight: 700; letter-spacing: 0.1em;">Standard Rate</span>
+            <div style="font-family: var(--font-interface); font-size: 26px; font-weight: 700; color: var(--forest-dark);">
+              {{ room.price_per_night|currency }} <span style="font-size: 12px; font-weight: 400; color: var(--text-muted);">/ night</span>
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <span style="display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; {% if available_count > 0 %}background: #e2f4ed; color: #0e6245;{% else %}background: #fee2e2; color: #b91c1c;{% endif %}">
+              {% if available_count > 0 %}{{ available_count }} rooms available{% else %}Sold Out{% endif %}
+            </span>
+          </div>
+        </div>
+
+        <form action="{{ url_for('booking_flow') }}" method="GET">
+          <input type="hidden" name="room_id" value="{{ room.id }}">
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+            <div>
+              <label class="form-label" style="font-size: 10px;">Check-In</label>
+              <input type="date" name="check_in" value="{{ check_in }}" required style="width: 100%; height: 38px; border: 1px solid var(--ivory-border); border-radius: 4px; padding: 0 10px; font-family: inherit; font-size: 13px;">
+            </div>
+            <div>
+              <label class="form-label" style="font-size: 10px;">Check-Out</label>
+              <input type="date" name="check_out" value="{{ check_out }}" required style="width: 100%; height: 38px; border: 1px solid var(--ivory-border); border-radius: 4px; padding: 0 10px; font-family: inherit; font-size: 13px;">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 18px;">
+            <div>
+              <label class="form-label" style="font-size: 10px;">Adults</label>
+              <select name="adults" style="width: 100%; height: 38px; border: 1px solid var(--ivory-border); border-radius: 4px; padding: 0 8px; font-family: inherit; font-size: 13px; background: #fff;">
+                {% for a in range(1, (room.max_occupancy or room.capacity_adults) + 1) %}
+                <option value="{{ a }}" {% if adults == a %}selected{% endif %}>{{ a }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label class="form-label" style="font-size: 10px;">Children</label>
+              <select name="children" style="width: 100%; height: 38px; border: 1px solid var(--ivory-border); border-radius: 4px; padding: 0 8px; font-family: inherit; font-size: 13px; background: #fff;">
+                <option value="0" {% if children == 0 %}selected{% endif %}>0</option>
+                <option value="1" {% if children == 1 %}selected{% endif %}>1</option>
+                <option value="2" {% if children == 2 %}selected{% endif %}>2</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" style="font-size: 10px;">Rooms</label>
+              <select name="rooms_count" style="width: 100%; height: 38px; border: 1px solid var(--ivory-border); border-radius: 4px; padding: 0 8px; font-family: inherit; font-size: 13px; background: #fff;">
+                {% for rc in range(1, (available_count if available_count > 0 else 1) + 1) %}
+                <option value="{{ rc }}" {% if rooms_count == rc %}selected{% endif %}>{{ rc }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <!-- Price Calculation Breakdown -->
+          <div style="background: var(--ivory-surface); border-radius: 4px; padding: 14px; margin-bottom: 20px; font-size: 13px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+              <span style="color: var(--text-secondary);">Base Stay ({{ nights }} night{{ 's' if nights > 1 else '' }} &times; {{ rooms_count }} room{{ 's' if rooms_count > 1 else '' }}):</span>
+              <span style="font-weight: 600;">{{ pricing.base_room_charges_fmt }}</span>
+            </div>
+
+            {% if pricing.extra_adults > 0 %}
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px; color: var(--forest-muted);">
+              <span>Extra Guest Surcharge:</span>
+              <span style="font-weight: 600;">{{ pricing.additional_guest_charges_fmt }}</span>
+            </div>
+            {% endif %}
+
+            <div style="border-top: 1px solid var(--ivory-border); margin-top: 8px; padding-top: 8px; display: flex; justify-content: space-between; font-weight: 700; color: var(--forest-dark); font-size: 15px;">
+              <span>Total Estimated:</span>
+              <span>{{ pricing.total_amount_fmt }}</span>
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+              Taxes and optional meal plans calculated in next step.
+            </div>
+          </div>
+
+          {% if available_count >= rooms_count %}
+            <button type="submit" class="btn btn-gold" style="width: 100%; height: 46px;">
+              Proceed to Reserve Room
+            </button>
+          {% else %}
+            <button type="button" class="btn btn-outline-forest" style="width: 100%; height: 46px; opacity: 0.6; cursor: not-allowed;" disabled>
+              Room Unavailable on Selected Dates
+            </button>
+            <div style="font-size: 12px; color: #b91c1c; text-align: center; margin-top: 8px;">
+              Please adjust your dates or browse alternative suites below.
+            </div>
+          {% endif %}
+        </form>
+
+        <div style="margin-top: 16px; text-align: center; font-size: 12px; color: var(--text-muted);">
+          Free cancellation up to 48 hours before check-in.
+        </div>
+      </div>
+    </div>
+
+    <!-- Similar Rooms Section -->
+    {% if similar_rooms %}
+    <div style="margin-top: 50px;">
+      <h3 style="font-family: var(--font-primary-heading); font-size: 26px; color: var(--forest-dark); margin-bottom: 20px;">Other Room Categories You May Consider</h3>
+      <div class="rooms-grid">
+        {% for sim in similar_rooms %}
+        <div class="room-card">
+          <div class="room-image-wrap" style="height: 180px;">
+            <img src="{{ sim.image_url }}" alt="{{ sim.name }}">
+            <div class="room-price-tag">
+              <span class="amount">{{ sim.price_per_night|currency }}</span>
+            </div>
+          </div>
+          <div class="room-body">
+            <span class="room-category">{{ sim.category }}</span>
+            <h4 class="room-title" style="font-size: 20px;">{{ sim.name }}</h4>
+            <div class="room-footer" style="padding-top: 12px;">
+              <a href="{{ url_for('room_detail', room_id=sim.id) }}" class="link-arrow">View Details</a>
+              <a href="{{ url_for('booking_flow', room_id=sim.id) }}" class="btn btn-outline-forest" style="height: 32px; padding: 0 12px; font-size: 11px;">Book</a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

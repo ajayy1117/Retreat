@@ -1,0 +1,435 @@
+{% extends "base.html" %}
+
+{% block title %}Guest Services & In-Room Amenities — RETREAT Hotel & Suites{% endblock %}
+
+{% block content %}
+<section style="padding-top: calc(var(--header-height) + 28px); padding-bottom: 80px; background: var(--color-ivory); min-height: 85vh;">
+  <div class="container" style="max-width: 1140px;">
+
+    <!-- Top Hero Banner -->
+    <div style="background: linear-gradient(135deg, var(--color-forest) 0%, #0d2820 100%); border-radius: var(--radius-sm); padding: 42px 36px; color: #ffffff; margin-bottom: 32px; position: relative; overflow: hidden; box-shadow: var(--shadow-md);">
+      <div style="position: relative; z-index: 2; max-width: 720px;">
+        <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--color-gold); font-weight: 600; display: block; margin-bottom: 8px;">
+          GUEST CARE &amp; IN-ROOM AMENITIES
+        </span>
+        <h1 style="font-family: var(--font-heading); font-size: 38px; color: #ffffff; margin: 0 0 12px; line-height: 1.15; font-weight: 500;">
+          Guest Services &amp; In-Room Dining
+        </h1>
+        <p style="font-size: 14px; color: rgba(255, 255, 255, 0.85); line-height: 1.6; margin: 0;">
+          Experience effortless hospitality. Order gourmet dining directly to your suite or dispatch immediate housekeeping, linen, laundry, and maintenance requests with seamless guest folio billing.
+        </p>
+      </div>
+      <div style="position: absolute; right: -30px; bottom: -30px; width: 260px; height: 260px; background: radial-gradient(circle, rgba(201, 161, 91, 0.18) 0%, transparent 70%); border-radius: 50%;"></div>
+    </div>
+
+    <!-- Active In-House Stay Quick Selector / Status Banner -->
+    {% if active_bookings %}
+      <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 18px 24px; margin-bottom: 32px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; box-shadow: var(--shadow-sm);">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div style="width: 42px; height: 42px; border-radius: 50%; background: var(--color-forest-tint); display: flex; align-items: center; justify-content: center; color: var(--color-forest); flex-shrink: 0;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+          </div>
+          <div>
+            <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted); font-weight: 600; display: block; margin-bottom: 2px;">
+              Active In-House Reservation
+            </span>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+              <select id="activeReservationSelect" onchange="onReservationChange(this.value);" style="border: 1px solid var(--color-border); border-radius: 4px; padding: 6px 12px; font-size: 13px; font-weight: 600; color: var(--color-forest); background: #ffffff;">
+                {% for b in active_bookings %}
+                  {% set rnum = b.assigned_room_number or (300 + (b.id % 20)) %}
+                  <option value="{{ b.id }}" data-code="{{ b.booking_code }}" data-room="Room #{{ '%03d'|format(rnum|int) }}">
+                    Room #{{ "%03d"|format(rnum|int) }} &bull; {{ b.room_name }} (Ref: {{ b.booking_code }}) &bull; Guest: {{ b.guest_name }}
+                  </option>
+                {% endfor %}
+              </select>
+              <a id="btnViewActiveBooking" href="{{ url_for('booking_details', booking_id=active_bookings[0].id) }}" class="btn btn-outline-forest" style="height: 32px; padding: 0 12px; font-size: 11px; display: inline-flex; align-items: center;">
+                Open Stay Folio
+              </a>
+            </div>
+          </div>
+        </div>
+        <div style="text-align: right; font-size: 12px; color: var(--color-text-muted);">
+          All services and orders are billed directly to your room folio.
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- TWO MAIN CATEGORIES -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 28px; margin-bottom: 36px;">
+
+      <!-- CATEGORY 1: ROOM SERVICE (IN-ROOM DINING) -->
+      <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow-sm); transition: transform 0.2s, box-shadow 0.2s;">
+        <!-- Card Header with image background -->
+        <div style="height: 190px; position: relative; background: linear-gradient(rgba(8, 34, 25, 0.4), rgba(8, 34, 25, 0.8)), url('https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80') center/cover no-repeat; padding: 22px; display: flex; flex-direction: column; justify-content: flex-end;">
+          <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--color-gold); font-weight: 700; background: rgba(8, 34, 25, 0.7); padding: 3px 8px; border-radius: 3px; align-self: flex-start; margin-bottom: 8px;">
+            In-Room Dining
+          </span>
+          <h2 style="font-family: var(--font-heading); font-size: 26px; color: #ffffff; margin: 0; line-height: 1.2;">
+            Room Service
+          </h2>
+        </div>
+
+        <div style="padding: 26px; flex: 1; display: flex; flex-direction: column;">
+          <p style="font-size: 13.5px; color: var(--color-text-secondary); line-height: 1.6; margin-bottom: 20px;">
+            Enjoy restaurant-quality meals prepared by our executive chefs, served directly in the privacy and comfort of your room or suite.
+          </p>
+
+          <!-- Core Feature Highlights -->
+          <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 26px; flex: 1;">
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+              <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--color-forest-tint); display: flex; align-items: center; justify-content: center; color: var(--color-forest); flex-shrink: 0; margin-top: 2px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+              </div>
+              <div>
+                <strong style="font-size: 13px; color: var(--color-forest); display: block;">Food &amp; Beverage Menu</strong>
+                <span style="font-size: 12px; color: var(--color-text-muted);">Curated appetizers, mains, beverages, desserts, and kid-friendly selections.</span>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+              <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--color-forest-tint); display: flex; align-items: center; justify-content: center; color: var(--color-forest); flex-shrink: 0; margin-top: 2px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+              </div>
+              <div>
+                <strong style="font-size: 13px; color: var(--color-forest); display: block;">Cart &amp; Real-Time Ordering</strong>
+                <span style="font-size: 12px; color: var(--color-text-muted);">Customize item quantities, add kitchen preparation notes, and review cart instantly.</span>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+              <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--color-forest-tint); display: flex; align-items: center; justify-content: center; color: var(--color-forest); flex-shrink: 0; margin-top: 2px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+              </div>
+              <div>
+                <strong style="font-size: 13px; color: var(--color-forest); display: block;">Direct Delivery to Guest Room</strong>
+                <span style="font-size: 12px; color: var(--color-text-muted);">Timely room-side delivery with order stage notifications (Placed &rarr; Preparing &rarr; Delivered).</span>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+              <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--color-forest-tint); display: flex; align-items: center; justify-content: center; color: var(--color-forest); flex-shrink: 0; margin-top: 2px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+              </div>
+              <div>
+                <strong style="font-size: 13px; color: var(--color-forest); display: block;">Automatic Guest Folio Integration</strong>
+                <span style="font-size: 12px; color: var(--color-text-muted);">Charges automatically post to your room ledger and billing folio upon fulfillment.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Button -->
+          <div style="border-top: 1px solid var(--color-border); padding-top: 20px;">
+            <a id="btnRoomServiceMenu" href="{{ url_for('food_menu', booking_id=active_bookings[0].id if active_bookings else none) }}" class="btn btn-forest" style="width: 100%; height: 42px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; letter-spacing: 0.05em; font-weight: 600; text-transform: uppercase;">
+              Browse Food Menu &amp; Order
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- CATEGORY 2: OTHER GUEST SERVICES -->
+      <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow-sm); transition: transform 0.2s, box-shadow 0.2s;">
+        <!-- Card Header with image background -->
+        <div style="height: 190px; position: relative; background: linear-gradient(rgba(8, 34, 25, 0.4), rgba(8, 34, 25, 0.8)), url('https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80') center/cover no-repeat; padding: 22px; display: flex; flex-direction: column; justify-content: flex-end;">
+          <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--color-gold); font-weight: 700; background: rgba(8, 34, 25, 0.7); padding: 3px 8px; border-radius: 3px; align-self: flex-start; margin-bottom: 8px;">
+            In-Room Assistance &amp; Care
+          </span>
+          <h2 style="font-family: var(--font-heading); font-size: 26px; color: #ffffff; margin: 0; line-height: 1.2;">
+            Other Guest Services
+          </h2>
+        </div>
+
+        <div style="padding: 26px; flex: 1; display: flex; flex-direction: column;">
+          <p style="font-size: 13.5px; color: var(--color-text-secondary); line-height: 1.6; margin-bottom: 20px;">
+            Submit requests directly to our front desk and housekeeping teams. Prompt response and tracking for your complete comfort during your stay.
+          </p>
+
+          <!-- Core Feature Highlights -->
+          <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 26px; flex: 1;">
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+              <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--color-forest-tint); display: flex; align-items: center; justify-content: center; color: var(--color-forest); flex-shrink: 0; margin-top: 2px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+              </div>
+              <div>
+                <strong style="font-size: 13px; color: var(--color-forest); display: block;">Housekeeping Requests</strong>
+                <span style="font-size: 12px; color: var(--color-text-muted);">Daily room refreshment, evening turndown service, and waste basket clearance (Complimentary).</span>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+              <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--color-forest-tint); display: flex; align-items: center; justify-content: center; color: var(--color-forest); flex-shrink: 0; margin-top: 2px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+              </div>
+              <div>
+                <strong style="font-size: 13px; color: var(--color-forest); display: block;">Fresh Towel Requests</strong>
+                <span style="font-size: 12px; color: var(--color-text-muted);">Plush bath towels, face towels, bath mats, and luxury toiletries replenishments (Complimentary).</span>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+              <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--color-forest-tint); display: flex; align-items: center; justify-content: center; color: var(--color-forest); flex-shrink: 0; margin-top: 2px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path></svg>
+              </div>
+              <div>
+                <strong style="font-size: 13px; color: var(--color-forest); display: block;">Laundry &amp; Dry Cleaning</strong>
+                <span style="font-size: 12px; color: var(--color-text-muted);">Same-day express guest laundry (₹350/load) and garment dry cleaning (₹600/bundle), billed to folio.</span>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+              <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--color-forest-tint); display: flex; align-items: center; justify-content: center; color: var(--color-forest); flex-shrink: 0; margin-top: 2px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+              </div>
+              <div>
+                <strong style="font-size: 13px; color: var(--color-forest); display: block;">Maintenance &amp; Assistance Requests</strong>
+                <span style="font-size: 12px; color: var(--color-text-muted);">Air conditioning adjustments, Wi-Fi support, electrical/plumbing attention (Complimentary).</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Single Unified Action Button -->
+          <div style="border-top: 1px solid var(--color-border); padding-top: 20px;">
+            {% if active_bookings %}
+              <button type="button" class="btn btn-gold" onclick="toggleQuickServiceForm();" style="width: 100%; height: 42px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; letter-spacing: 0.05em; font-weight: 600; text-transform: uppercase;">
+                Request In-Room Service
+              </button>
+            {% else %}
+              <a href="{{ url_for('my_bookings') }}" class="btn btn-gold" style="width: 100%; height: 42px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; letter-spacing: 0.05em; font-weight: 600; text-transform: uppercase;">
+                View My Reservations
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ONE CONSOLIDATED SERVICE REQUEST SUBMISSION FORM -->
+    <div id="quickServiceCard" style="display: none; background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 28px; margin-bottom: 36px; box-shadow: var(--shadow-sm);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+        <div>
+          <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--color-gold); font-weight: 700; display: block; margin-bottom: 4px;">
+            INSTANT DISPATCH
+          </span>
+          <h3 style="font-family: var(--font-heading); font-size: 24px; color: var(--color-forest); margin: 0;">
+            Submit In-Room Service Request
+          </h3>
+          <p style="font-size: 13px; color: var(--color-text-muted); margin: 4px 0 0;">
+            Our guest assistance desk receives your request immediately.
+          </p>
+        </div>
+        <button type="button" onclick="toggleQuickServiceForm();" style="background: none; border: none; font-size: 20px; color: var(--color-text-muted); cursor: pointer;">&times;</button>
+      </div>
+
+      <form id="quickGuestServiceForm" onsubmit="submitQuickServiceRequest(event);">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 18px;">
+          <div>
+            <label style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--color-text-secondary); display: block; margin-bottom: 6px;">Target Reservation &amp; Room</label>
+            <select id="quickFormBookingId" required style="width: 100%; height: 38px; border: 1px solid var(--color-border); border-radius: 4px; padding: 0 10px; font-family: var(--font-interface); font-size: 13px; background: #fff;">
+              {% for b in active_bookings %}
+                {% set rnum = b.assigned_room_number or (300 + (b.id % 20)) %}
+                <option value="{{ b.id }}">
+                  Room #{{ "%03d"|format(rnum|int) }} &bull; {{ b.room_name }} ({{ b.booking_code }})
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--color-text-secondary); display: block; margin-bottom: 6px;">Service Type</label>
+            <select id="quickFormServiceType" style="width: 100%; height: 38px; border: 1px solid var(--color-border); border-radius: 4px; padding: 0 10px; font-family: var(--font-interface); font-size: 13px; background: #fff;">
+              <option value="Housekeeping">Housekeeping (Complimentary)</option>
+              <option value="Extra Towels">Fresh Towels &amp; Linens (Complimentary)</option>
+              <option value="Room Cleaning">Turn-down &amp; Deep Cleaning (Complimentary)</option>
+              <option value="Maintenance">Maintenance &amp; Tech Assistance (Complimentary)</option>
+              <option value="Laundry">Guest Laundry Service (₹350 per load)</option>
+              <option value="Dry Cleaning">Dry Cleaning (₹600 per garment bundle)</option>
+              <option value="Extra Bedding">Extra Bedding &amp; Rollaway (₹500 per night)</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--color-text-secondary); display: block; margin-bottom: 6px;">Priority</label>
+            <select id="quickFormPriority" style="width: 100%; height: 38px; border: 1px solid var(--color-border); border-radius: 4px; padding: 0 10px; font-family: var(--font-interface); font-size: 13px; background: #fff;">
+              <option value="Standard">Standard</option>
+              <option value="High">High / Urgent Attention</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 18px;">
+          <label style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--color-text-secondary); display: block; margin-bottom: 6px;">Special Instructions &amp; Preferred Time</label>
+          <textarea id="quickFormDescription" required rows="2" placeholder="e.g. Please bring 2 sets of fresh bath towels and toiletries after 2:30 PM." style="width: 100%; border: 1px solid var(--color-border); border-radius: 4px; padding: 8px 10px; font-family: var(--font-interface); font-size: 13px; box-sizing: border-box;"></textarea>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 12px; align-items: center;">
+          <button type="button" class="btn btn-outline-forest" onclick="toggleQuickServiceForm();" style="height: 38px; padding: 0 16px; font-size: 11px;">Cancel</button>
+          <button type="submit" id="btnSubmitQuickSrv" class="btn btn-gold" style="height: 38px; padding: 0 22px; font-size: 11px;">Submit Service Request</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- ONE SECTION SHOWING EXISTING REQUESTS & TRACKING -->
+    <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 26px 28px; margin-bottom: 36px; box-shadow: var(--shadow-sm);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <h3 style="font-family: var(--font-heading); font-size: 22px; color: var(--color-forest); margin: 0 0 4px;">
+            Service Requests &amp; Status Tracking
+          </h3>
+          <p style="font-size: 13px; color: var(--color-text-muted); margin: 0;">
+            Track the status of your in-room hospitality requests in real time.
+          </p>
+        </div>
+        {% if active_bookings %}
+          <button type="button" class="btn btn-outline-forest" onclick="toggleQuickServiceForm();" style="height: 34px; padding: 0 14px; font-size: 11px;">
+            + New Service Request
+          </button>
+        {% endif %}
+      </div>
+
+      {% if existing_requests %}
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          {% for sreq in existing_requests %}
+            <div style="border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 16px 18px; background: #fafaf8; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+              <div style="flex: 1; min-width: 260px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap;">
+                  <span class="reference-code numeric-value" style="color: var(--color-forest); font-size: 14px; font-weight: 700;">
+                    {{ sreq.request_ref }}
+                  </span>
+                  <span class="badge" style="background: var(--color-forest-tint); color: var(--color-forest); font-size: 11px; font-weight: 600;">
+                    {{ sreq.request_type }}
+                  </span>
+                  <span class="badge badge-{{ sreq.status|lower|replace(' ', '-') }}" style="font-size: 11px; padding: 2px 8px; font-weight: 600;">
+                    {{ sreq.status }}
+                  </span>
+                  <span style="font-size: 12px; color: var(--color-text-secondary); font-weight: 500;">
+                    Folio: <strong class="numeric-value">{{ sreq.booking_code }}</strong> (Room #{{ sreq.room_number }})
+                  </span>
+                  {% if sreq.is_chargeable %}
+                    {% if sreq.status == 'Completed' %}
+                      <span style="font-size: 11px; color: #166534; font-weight: 600;">✓ Billed to Folio ({{ sreq.charge_amount|currency }})</span>
+                    {% else %}
+                      <span style="font-size: 11px; color: #854d0e; font-weight: 500; background: #fef9c3; padding: 2px 8px; border-radius: 4px; border: 1px solid #fef08a;">
+                        Billable on completion: {{ sreq.charge_amount|currency }}
+                      </span>
+                    {% endif %}
+                  {% else %}
+                    <span style="font-size: 11px; color: var(--color-text-muted);">Complimentary</span>
+                  {% endif %}
+                </div>
+                <div style="font-size: 13px; color: var(--color-forest); margin-bottom: 4px;">
+                  {{ sreq.description }}
+                </div>
+                <div class="date-value numeric-value" style="font-size: 11px; color: var(--color-text-muted);">
+                  Requested: {{ sreq.created_at }} {% if sreq.completed_at %} &bull; Completed: {{ sreq.completed_at }}{% endif %}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div style="text-align: center; padding: 32px 20px; background: #fafaf8; border-radius: var(--radius-sm); border: 1px dashed var(--color-border);">
+          <p style="font-size: 13px; color: var(--color-text-muted); margin-bottom: 12px;">No active or past service requests found.</p>
+          {% if active_bookings %}
+            <button type="button" class="btn btn-forest" onclick="toggleQuickServiceForm();" style="height: 36px; font-size: 11px;">
+              Request Housekeeping or Fresh Towels
+            </button>
+          {% else %}
+            <a href="{{ url_for('my_bookings') }}" class="btn btn-forest" style="height: 36px; font-size: 11px;">
+              View My Reservations
+            </a>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Concierge Assistance Contact Bar -->
+    <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 22px 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--color-forest-tint); display: flex; align-items: center; justify-content: center; color: var(--color-forest);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+        </div>
+        <div>
+          <h4 style="font-family: var(--font-heading); font-size: 17px; color: var(--color-forest); margin: 0;">24/7 Front Desk &amp; Concierge</h4>
+          <span style="font-size: 12px; color: var(--color-text-muted);">From your in-room telephone dial <strong>9</strong> or call <strong>+91 (0141) 289-4000</strong>.</span>
+        </div>
+      </div>
+      <div>
+        <a href="{{ url_for('contact') }}" class="btn btn-outline-forest" style="height: 34px; padding: 0 14px; font-size: 11px;">
+          Contact Front Desk
+        </a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<script>
+function onReservationChange(bookingId) {
+  const sel = document.getElementById('activeReservationSelect');
+  const btnFolio = document.getElementById('btnViewActiveBooking');
+  const btnMenu = document.getElementById('btnRoomServiceMenu');
+  const quickBookingSel = document.getElementById('quickFormBookingId');
+
+  if (btnFolio) {
+    btnFolio.href = '/my-bookings/' + bookingId;
+  }
+  if (btnMenu) {
+    btnMenu.href = '/dining/menu?booking_id=' + bookingId;
+  }
+  if (quickBookingSel) {
+    quickBookingSel.value = bookingId;
+  }
+}
+
+function toggleQuickServiceForm() {
+  const card = document.getElementById('quickServiceCard');
+  if (card) {
+    const isHidden = (card.style.display === 'none' || card.style.display === '');
+    card.style.display = isHidden ? 'block' : 'none';
+    if (isHidden) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+}
+
+function submitQuickServiceRequest(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btnSubmitQuickSrv');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  const bookingId = document.getElementById('quickFormBookingId').value;
+  const reqType = document.getElementById('quickFormServiceType').value;
+  const priority = document.getElementById('quickFormPriority').value;
+  const description = document.getElementById('quickFormDescription').value;
+
+  fetch('{{ url_for("api_create_service_request") }}', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      booking_id: bookingId,
+      request_type: reqType,
+      priority: priority,
+      description: description
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.status === 'success') {
+      alert(data.message);
+      document.getElementById('quickGuestServiceForm').reset();
+      window.location.reload();
+    } else {
+      alert(data.message || 'Failed to submit service request.');
+      btn.disabled = false;
+      btn.textContent = 'Submit Service Request';
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    alert('An unexpected network error occurred.');
+    btn.disabled = false;
+    btn.textContent = 'Submit Service Request';
+  });
+}
+</script>
+{% endblock %}

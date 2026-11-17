@@ -1,0 +1,152 @@
+{% extends "admin/base_admin.html" %}
+
+{% block page_title %}Customer 360 &bull; {{ customer.full_name }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 0 auto;">
+  
+  <div style="margin-bottom: 20px;">
+    <a href="{{ url_for('admin_customers') }}" style="font-size: 12px; color: var(--color-gold); font-weight: 600; text-decoration: none;">
+      &larr; Back to Customer Directory
+    </a>
+  </div>
+
+  <!-- Profile Card -->
+  <div class="admin-card" style="margin-bottom: 24px;">
+    <div class="admin-card-header" style="background: var(--color-forest); color: #FAF8F3; padding: 22px 28px;">
+      <div>
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-gold); font-weight: 600; margin-bottom: 4px;">
+          Customer 360 Profile
+        </div>
+        <h2 style="font-family: var(--font-heading); font-size: 26px; margin: 0; color: #FAF8F3;">
+          {{ customer.full_name }}
+        </h2>
+      </div>
+      <span class="reference-code numeric-value" style="font-size: 16px; color: var(--color-gold); font-weight: 700;">
+        {{ customer.customer_id }}
+      </span>
+    </div>
+
+    <div style="padding: 24px;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+        <div>
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--color-text-muted); font-weight: 600;">Email Address</div>
+          <div style="font-size: 14px; font-weight: 600; color: var(--color-forest); margin-top: 2px;">{{ customer.email }}</div>
+        </div>
+        <div>
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--color-text-muted); font-weight: 600;">Contact Phone</div>
+          <div class="numeric-value" style="font-size: 14px; font-weight: 600; color: var(--color-forest); margin-top: 2px;">{{ customer.phone or 'N/A' }}</div>
+        </div>
+        <div>
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--color-text-muted); font-weight: 600;">Lifetime Spend</div>
+          <div class="currency-value numeric-value" style="font-size: 18px; font-weight: 700; color: var(--color-forest); margin-top: 2px;">{{ total_lifetime_fmt }}</div>
+        </div>
+        <div>
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--color-text-muted); font-weight: 600;">Active Outstanding Balance</div>
+          <div class="currency-value numeric-value" style="font-size: 18px; font-weight: 700; color: #b91c1c; margin-top: 2px;">{{ total_unpaid_fmt }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reservation History -->
+  <div class="admin-card" style="margin-bottom: 24px;">
+    <div class="admin-card-header">
+      <h3 class="admin-card-title">Stay &amp; Reservation History (<span class="numeric-value" style="font-family: var(--font-interface); font-weight: 700;">{{ bookings|length }}</span>)</h3>
+    </div>
+    <div class="table-responsive">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Booking Ref</th>
+            <th>Room Category</th>
+            <th>Assigned Room</th>
+            <th>Stay Period</th>
+            <th>Charges</th>
+            <th>Outstanding</th>
+            <th>Status</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in bookings %}
+          <tr>
+            <td>
+              <strong class="reference-code numeric-value" style="color: var(--color-forest);">{{ b.booking_code }}</strong>
+            </td>
+            <td>{{ b.room_name }}</td>
+            <td>
+              {% if b.assigned_room_number %}
+                <span class="badge" style="background: var(--color-forest-tint); color: var(--color-forest);">Room {{ b.assigned_room_number }}</span>
+              {% else %}
+                <span style="font-size: 11px; color: var(--color-text-muted);">Unassigned</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="date-value numeric-value" style="font-size: 12px;">{{ b.check_in }} &rarr; {{ b.check_out }}</div>
+            </td>
+            <td class="currency-value numeric-value" style="font-weight: 700;">{{ b.financials.total_charges_formatted }}</td>
+            <td>
+              {% if b.financials.outstanding_balance > 0 %}
+                <strong class="currency-value numeric-value" style="color: #b91c1c;">{{ b.financials.outstanding_balance_formatted }}</strong>
+              {% else %}
+                <span class="numeric-value" style="font-size: 11px; color: #166534; font-weight: 600;">✓ Settled</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge badge-{{ b.status|lower|replace(' ', '') }}">{{ b.status }}</span>
+            </td>
+            <td style="text-align: right;">
+              <a href="{{ url_for('admin_expenses', booking_id=b.id) }}" class="admin-btn admin-btn-outline" style="font-size: 10px; height: 26px; padding: 0 8px;">
+                Folio &rarr;
+              </a>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 24px; color: var(--color-text-muted);">No bookings recorded for this guest.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Cleared Transactions -->
+  <div class="admin-card">
+    <div class="admin-card-header">
+      <h3 class="admin-card-title">Payment Transactions &amp; Receipts</h3>
+    </div>
+    <div class="table-responsive">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Ref</th>
+            <th>Date</th>
+            <th>Method</th>
+            <th>Notes</th>
+            <th style="text-align: right;">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in payments %}
+          <tr>
+            <td class="reference-code numeric-value" style="font-weight: 700; color: var(--color-forest);">{{ p.transaction_ref }}</td>
+            <td class="date-value numeric-value" style="font-size: 12px;">{{ p.transaction_date }}</td>
+            <td>{{ p.payment_method }}</td>
+            <td style="font-size: 12px; color: var(--color-text-muted);">{{ p.notes or 'Payment' }}</td>
+            <td class="currency-value numeric-value" style="text-align: right; font-weight: 700; color: #166534;">{{ p.amount|currency }}</td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="5" style="text-align: center; padding: 20px; color: var(--color-text-muted);">No payment records on file.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+

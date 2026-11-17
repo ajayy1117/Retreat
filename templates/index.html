@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-pretitle">COMFORT, ELEGANCE, HOSPITALITY</div>
+    <h1 class="hero-title">Where Every Stay<br><span style="font-style: italic; font-family: var(--font-primary-heading); color: var(--gold-light);">Feels Extraordinary</span></h1>
+    <p class="hero-subtitle">
+      Welcome to RETREAT Hotel & Suites. Experience contemporary rooms, attentive service, and restful amenities crafted for business travelers, couples, and families at accessible rates.
+    </p>
+    <div class="hero-buttons">
+      <a href="{{ url_for('rooms_catalog') }}" class="btn btn-gold">
+        Search & Book Rooms
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+      </a>
+      <a href="#featured-rooms" class="btn btn-outline-light">View Rooms & Rates</a>
+    </div>
+  </div>
+</section>
+
+<!-- Floating Booking Search Bar -->
+<div class="container booking-bar-wrapper">
+  <div class="booking-bar">
+    <form action="{{ url_for('rooms_catalog') }}" method="GET" class="booking-form" id="home-search-form">
+      <div class="form-group-item">
+        <label>Check-In Date</label>
+        <div class="input-with-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <input type="date" name="check_in" id="search-checkin" value="{{ default_check_in }}" required>
+        </div>
+      </div>
+
+      <div class="form-group-item">
+        <label>Check-Out Date</label>
+        <div class="input-with-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <input type="date" name="check_out" id="search-checkout" value="{{ default_check_out }}" required>
+        </div>
+      </div>
+
+      <div class="form-group-item" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+        <div>
+          <label>Adults</label>
+          <select name="adults" style="width: 100%; border: none; background: transparent; font-size: 13px; font-weight: 500; outline: none;">
+            <option value="1">1 Adult</option>
+            <option value="2" selected>2 Adults</option>
+            <option value="3">3 Adults</option>
+            <option value="4">4 Adults</option>
+          </select>
+        </div>
+        <div>
+          <label>Children</label>
+          <select name="children" style="width: 100%; border: none; background: transparent; font-size: 13px; font-weight: 500; outline: none;">
+            <option value="0" selected>0</option>
+            <option value="1">1 Child</option>
+            <option value="2">2 Children</option>
+          </select>
+        </div>
+        <div>
+          <label>Rooms</label>
+          <select name="rooms_count" style="width: 100%; border: none; background: transparent; font-size: 13px; font-weight: 500; outline: none;">
+            <option value="1" selected>1 Room</option>
+            <option value="2">2 Rooms</option>
+            <option value="3">3 Rooms</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <button type="submit" class="btn btn-gold" style="width: 100%;">Check Availability</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Featured Rooms Section -->
+<section id="featured-rooms" class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-subtitle">Comfortable Stays</span>
+      <h2 class="section-title">Rooms & Suites</h2>
+      <p class="section-desc">Designed for quiet rest, productivity, and modern convenience at honest, transparent rates.</p>
+    </div>
+
+    <div class="rooms-grid">
+      {% for room in rooms %}
+      <div class="room-card">
+        <div class="room-image-wrap">
+          <img src="{{ room.image_url }}" alt="{{ room.name }}">
+          {% if room.badge %}
+            <span class="room-badge">{{ room.badge }}</span>
+          {% endif %}
+          <div class="room-price-tag">
+            <span class="amount">{{ room.price_per_night|currency }}</span>
+            <span class="period">/ night</span>
+          </div>
+        </div>
+
+        <div class="room-body">
+          <div class="room-category">{{ room.category }}</div>
+          <h3 class="room-title">{{ room.name }}</h3>
+          <p class="room-tagline">{{ room.tagline }}</p>
+
+          <div class="room-meta">
+            <div class="room-meta-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <span>{{ room.capacity_adults }} Base / {{ room.max_occupancy or room.capacity_adults }} Max</span>
+            </div>
+            <div class="room-meta-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
+              <span>{{ room.size_sqft }} sq ft</span>
+            </div>
+            <div class="room-meta-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              <span>{{ room.rating }}</span>
+            </div>
+          </div>
+
+          <div class="room-amenities-pills">
+            {% for item in room.features.split(',')[:4] %}
+            <span class="amenity-pill">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              {{ item }}
+            </span>
+            {% endfor %}
+          </div>
+
+          <div class="room-footer">
+            <a href="{{ url_for('room_detail', room_id=room.id, check_in=default_check_in, check_out=default_check_out) }}" class="link-arrow">
+              View Details
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </a>
+            <a href="{{ url_for('booking_flow', room_id=room.id, check_in=default_check_in, check_out=default_check_out) }}" class="btn btn-outline-forest" style="height: 36px; padding: 0 16px;">
+              Book Now
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Amenities & Hotel Services Section -->
+<section class="section section-bg-ivory experience-section">
+  <div class="container">
+    <div class="experience-grid">
+      <div class="experience-content">
+        <span class="section-subtitle">Comfort & Convenience</span>
+        <h2 class="section-title">Essential Services for<br><span style="font-style: italic; color: var(--champagne-gold);">a Restful Stay</span></h2>
+        <p>
+          Whether visiting for business meetings, transit, or a relaxing family weekend, RETREAT Hotel & Suites offers reliable services, clean spaces, and genuine hospitality.
+        </p>
+
+        <ul class="amenity-list">
+          <li class="amenity-item">
+            <div class="amenity-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+            </div>
+            <span>24/7 Room Service &amp; In-Room Dining</span>
+          </li>
+          <li class="amenity-item">
+            <div class="amenity-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+            </div>
+            <span>High-Speed Wi-Fi & Work Desks</span>
+          </li>
+          <li class="amenity-item">
+            <div class="amenity-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+            </div>
+            <span>24/7 Front Desk & Security</span>
+          </li>
+          <li class="amenity-item">
+            <div class="amenity-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            </div>
+            <span>Conference & Meeting Space</span>
+          </li>
+        </ul>
+
+        <a href="{{ url_for('experiences') }}" class="btn btn-forest">
+          Explore Hotel Amenities
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </a>
+      </div>
+
+      <!-- Modern Hotel Mosaic Showcase -->
+      <div class="experience-gallery-mosaic">
+        <div class="mosaic-img-1">
+          <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80" alt="Comfortable Hotel Room">
+        </div>
+        <div class="mosaic-img-2">
+          <img src="https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=800&q=80" alt="In-Room Dining & Hospitality">
+        </div>
+        <div class="mosaic-img-3">
+          <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80" alt="Fitness Centre">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

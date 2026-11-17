@@ -1,0 +1,1131 @@
+{% extends "base.html" %}
+
+{% block title %}Reservation Details — {{ booking.booking_code }} — RETREAT Hotel & Suites{% endblock %}
+
+{% block content %}
+<section style="padding-top: calc(var(--header-height) + 28px); padding-bottom: 80px; background: var(--color-ivory); min-height: 85vh;">
+  <div class="container" style="max-width: 1080px;">
+
+    <!-- Breadcrumb & Top Bar -->
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-text-muted);">
+        <a href="{{ url_for('my_bookings') }}" style="color: var(--color-forest); text-decoration: none; font-weight: 500;">
+          Back to My Reservations
+        </a>
+        <span>/</span>
+        <span style="color: var(--color-gold-dark); font-weight: 600;">Folio #{{ booking.booking_code }}</span>
+      </div>
+
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        {% if booking.status in ['Confirmed', 'Checked In'] %}
+          <a href="{{ url_for('checkout_billing', booking_id=booking.id) }}" class="btn btn-gold" style="height: 38px; padding: 0 16px; font-size: 11px;">
+            Checkout &amp; Bill
+          </a>
+        {% elif booking.status in ['Checked Out', 'Completed'] %}
+          <a href="{{ url_for('view_invoice', booking_id=booking.id) }}" class="btn btn-gold" style="height: 38px; padding: 0 16px; font-size: 11px;">
+            View Final Invoice
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Header Folio Card -->
+    <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 26px 30px; margin-bottom: 24px; box-shadow: var(--shadow-sm);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+        <div>
+          <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--color-gold-dark); font-weight: 700; display: block; margin-bottom: 4px;">
+            Reservation Management
+          </span>
+          <h1 style="font-family: var(--font-heading); font-size: 30px; color: var(--color-forest); margin: 0 0 6px; line-height: 1.2;">
+            {{ booking.room_name }}
+          </h1>
+          <p style="font-size: 13px; color: var(--color-text-muted); margin: 0;">
+            Booking Code: <strong>{{ booking.booking_code }}</strong> &bull; Assigned Room: <strong>Suite #{{ room_number }}</strong> &bull; Guest: <strong>{{ booking.guest_name }}</strong>
+          </p>
+        </div>
+
+        <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+          <div style="display: flex; gap: 8px;">
+            <span class="badge badge-{{ booking.status|lower|replace(' ', '') }}" style="font-size: 12px; padding: 5px 12px; font-weight: 600;">
+              {{ booking.status }}
+            </span>
+            <span class="badge badge-payment-{{ financials.payment_status|lower|replace(' ', '') }}" style="font-size: 12px; padding: 5px 12px; font-weight: 600;">
+              {{ financials.payment_status }}
+            </span>
+          </div>
+          <div style="font-size: 12px; color: var(--color-text-muted);">
+            Booked on {{ booking.created_at|format_date }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Financial Summary Cards (Centralized Calculation Engine) -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; margin-bottom: 28px;">
+      
+      <!-- Total Booking Amount -->
+      <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 18px 20px; box-shadow: var(--shadow-sm);">
+        <span style="font-family: var(--font-interface); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); display: block; margin-bottom: 6px;">
+          Total Charges
+        </span>
+        <div style="font-family: var(--font-interface); font-size: 20px; color: var(--color-forest); font-weight: 600; font-feature-settings: 'tnum' 1;">
+          {{ financials.total_charges_formatted }}
+        </div>
+        <div style="font-family: var(--font-interface); font-size: 11px; color: var(--color-text-muted); margin-top: 6px;">
+          Room tariff &amp; finalized charges
+        </div>
+      </div>
+
+      <!-- Amount Paid -->
+      <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 18px 20px; box-shadow: var(--shadow-sm);">
+        <span style="font-family: var(--font-interface); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: #166534; display: block; margin-bottom: 6px;">
+          Amount Paid
+        </span>
+        <div style="font-family: var(--font-interface); font-size: 20px; color: #166534; font-weight: 600; font-feature-settings: 'tnum' 1;">
+          {{ financials.total_paid_formatted }}
+        </div>
+        <div style="font-family: var(--font-interface); font-size: 11px; color: var(--color-text-muted); margin-top: 6px;">
+          {{ payments|length }} payment(s) cleared
+        </div>
+      </div>
+
+      <!-- Additional Incidentals -->
+      <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 18px 20px; box-shadow: var(--shadow-sm);">
+        <span style="font-family: var(--font-interface); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); display: block; margin-bottom: 6px;">
+          Additional Expenses
+        </span>
+        <div style="font-family: var(--font-interface); font-size: 20px; color: var(--color-forest); font-weight: 600; font-feature-settings: 'tnum' 1;">
+          {{ financials.additional_expenses_total_formatted }}
+        </div>
+        <div style="font-family: var(--font-interface); font-size: 11px; color: var(--color-text-muted); margin-top: 6px;">
+          Room service &amp; laundry
+        </div>
+      </div>
+
+      <!-- Outstanding Balance -->
+      <div style="background: {% if financials.outstanding_balance > 0 %}#fffbeb{% else %}#f0fdf4{% endif %}; border-radius: var(--radius-sm); border: 1px solid {% if financials.outstanding_balance > 0 %}#fef08a{% else %}#bbf7d0{% endif %}; padding: 18px 20px; box-shadow: var(--shadow-sm);">
+        <span style="font-family: var(--font-interface); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: {% if financials.outstanding_balance > 0 %}#854d0e{% else %}#166534{% endif %}; display: block; margin-bottom: 6px;">
+          Outstanding Balance
+        </span>
+        <div style="font-family: var(--font-interface); font-size: 20px; color: {% if financials.outstanding_balance > 0 %}#991b1b{% else %}#166534{% endif %}; font-weight: 700; font-feature-settings: 'tnum' 1;">
+          {{ financials.outstanding_balance_formatted }}
+        </div>
+        <div style="font-family: var(--font-interface); font-size: 11px; color: var(--color-text-muted); margin-top: 6px;">
+          {% if financials.outstanding_balance > 0 %}
+            <a href="{{ url_for('booking_payments', booking_id=booking.id) }}" class="btn-settle-cta">Settle Now</a>
+          {% else %}
+            Folio settled in full
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Structured Tabbed Reservation Management Sections -->
+    <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); overflow: hidden; box-shadow: var(--shadow-sm); margin-bottom: 30px;">
+      
+      <!-- Mobile Tab Dropdown Selector (Accessible Responsive Pattern) -->
+      <div class="mobile-tab-dropdown-wrapper">
+        <label for="mobileTabSelect" style="font-family: var(--font-interface); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); display: block; margin-bottom: 6px;">
+          Select Section
+        </label>
+        <select id="mobileTabSelect" onchange="switchTab(this.value)" class="mobile-tab-select">
+          <option value="tab-stay">Stay Details</option>
+          <option value="tab-payments">Payments</option>
+          <option value="tab-ledger">Expense Ledger</option>
+          <option value="tab-dining">Food Service</option>
+          <option value="tab-services">Guest Services</option>
+          <option value="tab-invoice">Invoice &amp; Voucher</option>
+          <option value="tab-cancel">Cancellation</option>
+        </select>
+      </div>
+
+      <!-- Desktop Tab Navigation Header (Fits 100% width, no overflow/scrollbar, no sequence numbers) -->
+      <div class="desktop-tab-nav-bar">
+        <button onclick="switchTab('tab-stay')" class="tab-nav-btn active" id="btn-tab-stay">
+          Stay Details
+        </button>
+        <button onclick="switchTab('tab-payments')" class="tab-nav-btn" id="btn-tab-payments">
+          Payments
+        </button>
+        <button onclick="switchTab('tab-ledger')" class="tab-nav-btn" id="btn-tab-ledger">
+          Expense Ledger
+        </button>
+        <button onclick="switchTab('tab-dining')" class="tab-nav-btn" id="btn-tab-dining">
+          Food Service
+        </button>
+        <button onclick="switchTab('tab-services')" class="tab-nav-btn" id="btn-tab-services">
+          Guest Services
+        </button>
+        <button onclick="switchTab('tab-invoice')" class="tab-nav-btn" id="btn-tab-invoice">
+          Invoice &amp; Voucher
+        </button>
+        <button onclick="switchTab('tab-cancel')" class="tab-nav-btn tab-cancel-btn" id="btn-tab-cancel">
+          Cancellation
+        </button>
+      </div>
+
+      <!-- Tab Content 1: Stay Details -->
+      <div id="tab-stay" class="tab-pane-content" style="display: block; padding: 28px;">
+        <h3 style="font-family: var(--font-heading); font-size: 22px; color: var(--color-forest); margin: 0 0 16px;">
+          Accommodation &amp; Stay Specifications
+        </h3>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+          <div>
+            <div class="meta-field-item">
+              <span class="meta-label">Room Category &amp; Name</span>
+              <strong class="meta-val">{{ booking.room_name }} ({{ booking.room_category or 'Standard Room' }})</strong>
+            </div>
+            <div class="meta-field-item">
+              <span class="meta-label">Assigned Room Number</span>
+              <strong class="meta-val">Room #{{ room_number }} &bull; Bedding: {{ booking.bed_type or 'King Bed' }}</strong>
+            </div>
+            <div class="meta-field-item">
+              <span class="meta-label">Room Size &amp; View</span>
+              <span class="meta-val">{{ booking.size_sqft or 320 }} sq ft &bull; {{ booking.room_view or 'Garden View' }}</span>
+            </div>
+            <div class="meta-field-item">
+              <span class="meta-label">Meal Plan</span>
+              <span class="meta-val">{{ booking.meal_plan or 'Room Only' }}</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="meta-field-item">
+              <span class="meta-label">Check-in Date</span>
+              <strong class="meta-val">{{ booking.check_in|format_date }} (From 2:00 PM)</strong>
+            </div>
+            <div class="meta-field-item">
+              <span class="meta-label">Check-out Date</span>
+              <strong class="meta-val">{{ booking.check_out|format_date }} (Until 11:00 AM)</strong>
+            </div>
+            <div class="meta-field-item">
+              <span class="meta-label">Duration &amp; Quantity</span>
+              <span class="meta-val">{{ booking.total_nights }} Night(s) &bull; {{ booking.rooms_count or 1 }} Room(s)</span>
+            </div>
+            <div class="meta-field-item">
+              <span class="meta-label">Occupancy</span>
+              <span class="meta-val">{{ booking.guests_adults }} Adults, {{ booking.guests_children }} Child</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="meta-field-item">
+              <span class="meta-label">Primary Guest Contact</span>
+              <strong class="meta-val">{{ booking.guest_name }}</strong>
+            </div>
+            <div class="meta-field-item">
+              <span class="meta-label">Email Address</span>
+              <span class="meta-val">{{ booking.guest_email }}</span>
+            </div>
+            <div class="meta-field-item">
+              <span class="meta-label">Phone Number</span>
+              <span class="meta-val">{{ booking.guest_phone }}</span>
+            </div>
+            {% if booking.special_requests %}
+              <div class="meta-field-item">
+                <span class="meta-label">Special Requests</span>
+                <span class="meta-val" style="font-style: italic;">&ldquo;{{ booking.special_requests }}&rdquo;</span>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content 2: Payments -->
+      <div id="tab-payments" class="tab-pane-content" style="display: none; padding: 28px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h3 style="font-family: var(--font-heading); font-size: 22px; color: var(--color-forest); margin: 0 0 4px;">
+              Payment History &amp; Transactions
+            </h3>
+            <p style="font-size: 13px; color: var(--color-text-muted); margin: 0;">
+              View confirmed transactions or submit a simulated payment.
+            </p>
+          </div>
+          {% if financials.outstanding_balance > 0 %}
+            <a href="{{ url_for('booking_payments', booking_id=booking.id) }}" class="btn btn-gold" style="height: 36px; padding: 0 16px; font-size: 11px;">
+              Make Payment (Balance: {{ financials.outstanding_balance_formatted }})
+            </a>
+          {% endif %}
+        </div>
+
+        {% if payments %}
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            {% for p in payments %}
+              <div style="border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 14px 18px; background: #fafaf8; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="reference-code numeric-value" style="color: var(--color-forest); font-size: 13px;">{{ p.transaction_ref }}</span>
+                    <span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #dcfce7; color: #166534; font-weight: 600;">{{ p.transaction_status }}</span>
+                  </div>
+                  <div style="font-size: 12px; color: var(--color-text-muted); margin-top: 2px;">
+                    Method: {{ p.payment_method }} &bull; Date: {{ p.transaction_date }}
+                  </div>
+                  {% if p.notes %}
+                    <div style="font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; font-style: italic;">
+                      &ldquo;{{ p.notes }}&rdquo;
+                    </div>
+                  {% endif %}
+                </div>
+                <div style="font-family: var(--font-body); font-size: 16px; font-weight: 700; color: #166534;">
+                  +{{ p.amount|currency }}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div style="text-align: center; padding: 36px; background: #fafaf8; border-radius: var(--radius-sm); border: 1px dashed var(--color-border);">
+            <p style="font-size: 13px; color: var(--color-text-muted); margin-bottom: 12px;">No payment records logged yet for this stay.</p>
+            <a href="{{ url_for('booking_payments', booking_id=booking.id) }}" class="btn btn-gold" style="height: 36px; font-size: 11px;">
+              Make Initial Deposit
+            </a>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Tab Content 3: Expense Ledger -->
+      <div id="tab-ledger" class="tab-pane-content" style="display: none; padding: 28px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h3 style="font-family: var(--font-heading); font-size: 22px; color: var(--color-forest); margin: 0 0 4px;">
+              Itemized Folio Ledger
+            </h3>
+            <p style="font-size: 13px; color: var(--color-text-muted); margin: 0;">
+              All finalized charges posted to your room folio.
+            </p>
+          </div>
+          <a href="{{ url_for('customer_ledger', booking_id=booking.id) }}" class="btn btn-outline-forest" style="height: 36px; padding: 0 16px; font-size: 11px;">
+            Open Standalone Ledger
+          </a>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px; font-family: var(--font-interface);">
+          <thead>
+            <tr style="border-bottom: 2px solid var(--color-border); text-align: left; color: var(--color-forest); font-weight: 600;">
+              <th style="padding: 10px 0; font-size: 12px;">Particulars</th>
+              <th style="padding: 10px; text-align: center; font-size: 12px;">Category</th>
+              <th style="padding: 10px; text-align: center; font-size: 12px;">Qty</th>
+              <th style="padding: 10px; text-align: right; font-size: 12px;">Unit Price</th>
+              <th style="padding: 10px 0; text-align: right; font-size: 12px;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for exp in expenses %}
+              <tr style="border-bottom: 1px solid var(--color-border);">
+                <td style="padding: 10px 0;">
+                  <strong style="color: var(--color-forest); font-size: 13px;">{{ exp.description }}</strong>
+                  <div class="reference-code numeric-value" style="font-size: 11px; color: var(--color-text-muted);">{{ exp.expense_ref }}</div>
+                </td>
+                <td style="padding: 10px; text-align: center;">
+                  <span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #f1f5f9; color: #475569; font-weight: 600;">
+                    {{ exp.category }}
+                  </span>
+                </td>
+                <td style="padding: 10px; text-align: center; color: var(--color-text-muted); font-size: 13px; font-feature-settings: 'tnum' 1;">{{ exp.quantity }}</td>
+                <td style="padding: 10px; text-align: right; color: var(--color-text-muted); font-size: 13px; font-feature-settings: 'tnum' 1;">{{ exp.unit_price|currency }}</td>
+                <td style="padding: 10px 0; text-align: right; font-weight: 600; color: var(--color-forest); font-size: 14px; font-feature-settings: 'tnum' 1;">{{ exp.total_amount|currency }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr style="border-top: 2px solid var(--color-border); background: #fafaf8;">
+              <td colspan="4" style="padding: 12px; text-align: right; color: var(--color-forest); font-weight: 600; font-size: 13px;">Total Folio Charges:</td>
+              <td style="padding: 12px 0; text-align: right; font-size: 14px; font-weight: 600; color: var(--color-forest); font-feature-settings: 'tnum' 1;">{{ financials.total_charges_formatted }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- Tab Content 4: Food Service -->
+      <div id="tab-dining" class="tab-pane-content" style="display: none; padding: 28px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h3 style="font-family: var(--font-heading); font-size: 22px; color: var(--color-forest); margin: 0 0 4px;">
+              Food Service &amp; Orders
+            </h3>
+            <p style="font-size: 13px; color: var(--color-text-muted); margin: 0;">
+              Delivered food orders are automatically added to your folio ledger.
+            </p>
+          </div>
+          {% if booking.status in ['Confirmed', 'Checked In'] %}
+            <a href="{{ url_for('food_menu', booking_id=booking.id) }}" class="btn btn-forest" style="height: 36px; padding: 0 16px; font-size: 11px;">
+              Place New Food Order
+            </a>
+          {% endif %}
+        </div>
+
+        {% if orders %}
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            {% for ord in orders %}
+              <div style="border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 16px; background: #fafaf8; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+                <div style="flex: 1; min-width: 260px;">
+                  <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap;">
+                    <span class="reference-code numeric-value" style="color: var(--color-forest); font-size: 15px; font-weight: 700;">
+                      {{ ord.order_ref }}
+                    </span>
+                    <span class="badge badge-{{ ord.order_status|lower|replace(' ', '-') }}" style="font-size: 11px; padding: 2px 8px; font-weight: 600;">
+                      {{ ord.order_status }}
+                    </span>
+                    {% if ord.order_status == 'Delivered' %}
+                      <span style="font-size: 11px; color: #166534; font-weight: 600;">✓ Finalized in Folio</span>
+                    {% elif ord.order_status == 'Cancelled' %}
+                      <span style="font-size: 11px; color: #991b1b; font-weight: 500;">Excluded from Folio</span>
+                    {% else %}
+                      <span style="font-size: 11px; color: #854d0e; font-weight: 500; background: #fef9c3; padding: 2px 8px; border-radius: 4px; border: 1px solid #fef08a;">
+                        Pending Delivery (Not billed yet)
+                      </span>
+                    {% endif %}
+                  </div>
+                  <div class="date-value numeric-value" style="font-size: 12px; color: var(--color-text-muted);">
+                    Ordered: {{ ord.order_date }}
+                  </div>
+                  {% if ord.delivery_notes %}
+                    <div style="font-size: 12px; color: var(--color-text-secondary); margin-top: 4px;">
+                      Instructions: <em>{{ ord.delivery_notes }}</em>
+                    </div>
+                  {% endif %}
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 18px;">
+                  <div style="text-align: right;">
+                    <div class="currency-value numeric-value" style="font-weight: 700; font-size: 16px; color: var(--color-forest);">
+                      {{ ord.total_amount|currency }}
+                    </div>
+                    {% if ord.order_status != 'Delivered' and ord.order_status != 'Cancelled' %}
+                      <div style="font-size: 10px; color: var(--color-text-muted); text-transform: uppercase;">Pending Billed</div>
+                    {% elif ord.order_status == 'Delivered' %}
+                      <div style="font-size: 10px; color: #166534; text-transform: uppercase;">Billed</div>
+                    {% endif %}
+                  </div>
+
+                  <button type="button" class="btn btn-outline-forest btn-track-order" data-order-id="{{ ord.id }}" style="height: 34px; padding: 0 14px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;">
+                    Track Order
+                  </button>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div style="text-align: center; padding: 36px; background: #fafaf8; border-radius: var(--radius-sm); border: 1px dashed var(--color-border);">
+            <p style="font-size: 13px; color: var(--color-text-muted); margin-bottom: 12px;">No room service orders placed yet for this stay.</p>
+            {% if booking.status in ['Confirmed', 'Checked In'] %}
+              <a href="{{ url_for('food_menu', booking_id=booking.id) }}" class="btn btn-forest" style="height: 36px; font-size: 11px;">
+                Browse Dining Menu &amp; Order
+              </a>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Tab Content: Guest Services (Housekeeping, Laundry, Towels, Maintenance) -->
+      <div id="tab-services" class="tab-pane-content" style="display: none; padding: 28px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 14px;">
+          <div>
+            <h3 style="font-family: var(--font-heading); font-size: 22px; color: var(--color-forest); margin: 0 0 4px;">
+              Guest &amp; In-Room Service Requests
+            </h3>
+            <p style="font-size: 13px; color: var(--color-text-muted); margin: 0;">
+              Request housekeeping, fresh towels, laundry, or maintenance assistance directly from your room.
+            </p>
+          </div>
+          {% if booking.status in ['Confirmed', 'Checked In'] %}
+            <button type="button" class="btn btn-forest" onclick="document.getElementById('service-request-form-card').style.display = document.getElementById('service-request-form-card').style.display === 'none' ? 'block' : 'none';" style="height: 36px; padding: 0 16px; font-size: 11px;">
+              New Service Request
+            </button>
+          {% endif %}
+        </div>
+
+        <!-- Request Submission Form (Collapsible) -->
+        <div id="service-request-form-card" style="display: none; background: #fafaf8; border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 20px; margin-bottom: 24px;">
+          <h4 style="font-family: var(--font-heading); font-size: 18px; color: var(--color-forest); margin: 0 0 12px;">
+            Submit New Service Request
+          </h4>
+          <form id="customer-service-request-form" onsubmit="submitCustomerServiceRequest(event);">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 14px;">
+              <div>
+                <label style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--color-text-secondary); display: block; margin-bottom: 4px;">Service Category</label>
+                <select id="req-service-type" style="width: 100%; height: 38px; border: 1px solid var(--color-border); border-radius: 4px; padding: 0 10px; font-family: var(--font-interface); font-size: 13px; background: #fff;">
+                  <option value="Housekeeping">Housekeeping (Complimentary)</option>
+                  <option value="Extra Towels">Extra Towels &amp; Linens (Complimentary)</option>
+                  <option value="Room Cleaning">Turn-down &amp; Deep Cleaning (Complimentary)</option>
+                  <option value="Maintenance">Maintenance &amp; Technical Support (Complimentary)</option>
+                  <option value="Laundry">Guest Laundry Service (₹350 per load)</option>
+                  <option value="Dry Cleaning">Dry Cleaning (₹600 per garment bundle)</option>
+                  <option value="Extra Bedding">Extra Bedding &amp; Rollaway (₹500 per night)</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--color-text-secondary); display: block; margin-bottom: 4px;">Priority</label>
+                <select id="req-priority" style="width: 100%; height: 38px; border: 1px solid var(--color-border); border-radius: 4px; padding: 0 10px; font-family: var(--font-interface); font-size: 13px; background: #fff;">
+                  <option value="Standard">Standard</option>
+                  <option value="High">High / Urgent</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-bottom: 14px;">
+              <label style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--color-text-secondary); display: block; margin-bottom: 4px;">Request Details &amp; Preferred Time</label>
+              <textarea id="req-description" required rows="2" placeholder="e.g., Please provide 2 extra bath towels and toiletries after 3:00 PM." style="width: 100%; border: 1px solid var(--color-border); border-radius: 4px; padding: 8px 10px; font-family: var(--font-interface); font-size: 13px; box-sizing: border-box;"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+              <button type="button" class="btn btn-outline-forest" onclick="document.getElementById('service-request-form-card').style.display = 'none';" style="height: 36px; padding: 0 14px; font-size: 11px;">Cancel</button>
+              <button type="submit" id="btn-submit-srv-req" class="btn btn-gold" style="height: 36px; padding: 0 18px; font-size: 11px;">Submit Request</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Request History List -->
+        {% if service_requests %}
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            {% for sreq in service_requests %}
+              <div style="border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 16px; background: #fafaf8; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+                <div style="flex: 1; min-width: 260px;">
+                  <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap;">
+                    <span class="reference-code numeric-value" style="color: var(--color-forest); font-size: 14px; font-weight: 700;">
+                      {{ sreq.request_ref }}
+                    </span>
+                    <span class="badge" style="background: var(--color-forest-tint); color: var(--color-forest); font-size: 11px; font-weight: 600;">
+                      {{ sreq.request_type }}
+                    </span>
+                    <span class="badge badge-{{ sreq.status|lower|replace(' ', '-') }}" style="font-size: 11px; padding: 2px 8px; font-weight: 600;">
+                      {{ sreq.status }}
+                    </span>
+                    {% if sreq.is_chargeable %}
+                      {% if sreq.status == 'Completed' %}
+                        <span style="font-size: 11px; color: #166534; font-weight: 600;">✓ Billed to Folio ({{ sreq.charge_amount|currency }})</span>
+                      {% else %}
+                        <span style="font-size: 11px; color: #854d0e; font-weight: 500; background: #fef9c3; padding: 2px 8px; border-radius: 4px; border: 1px solid #fef08a;">
+                          Billable on completion: {{ sreq.charge_amount|currency }}
+                        </span>
+                      {% endif %}
+                    {% else %}
+                      <span style="font-size: 11px; color: var(--color-text-muted);">Complimentary</span>
+                    {% endif %}
+                  </div>
+                  <div style="font-size: 13px; color: var(--color-forest); margin-bottom: 4px;">
+                    {{ sreq.description }}
+                  </div>
+                  <div class="date-value numeric-value" style="font-size: 11px; color: var(--color-text-muted);">
+                    Requested: {{ sreq.created_at }} {% if sreq.completed_at %} &bull; Completed: {{ sreq.completed_at }}{% endif %}
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div style="text-align: center; padding: 36px; background: #fafaf8; border-radius: var(--radius-sm); border: 1px dashed var(--color-border);">
+            <p style="font-size: 13px; color: var(--color-text-muted); margin-bottom: 12px;">No special service requests submitted for this stay.</p>
+            {% if booking.status in ['Confirmed', 'Checked In'] %}
+              <button type="button" class="btn btn-forest" onclick="document.getElementById('service-request-form-card').style.display = 'block';" style="height: 36px; font-size: 11px;">
+                Request Housekeeping or Fresh Towels
+              </button>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+      <!-- Tab Content 5: Invoice & Voucher -->
+      <div id="tab-invoice" class="tab-pane-content" style="display: none; padding: 28px;">
+        <h3 style="font-family: var(--font-heading); font-size: 22px; color: var(--color-forest); margin: 0 0 16px;">
+          Invoice &amp; Voucher Documents
+        </h3>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+          <!-- Tax Invoice Card -->
+          <div style="border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 20px; background: #fafaf8; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span style="font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-gold-dark); font-weight: 700;">Financial Record</span>
+              </div>
+              <h4 style="font-family: var(--font-heading); font-size: 19px; color: var(--color-forest); margin: 0 0 8px;">View Invoice</h4>
+              <p style="font-size: 12.5px; color: var(--color-text-muted); line-height: 1.5; margin-bottom: 16px;">
+                Displays the booking financial breakdown, itemized tariffs, food &amp; incidentals charges, applied payments, taxes, and outstanding balance.
+              </p>
+            </div>
+            <div>
+              <a href="{{ url_for('view_invoice', booking_id=booking.id) }}" class="btn btn-gold" style="height: 38px; font-size: 11.5px; padding: 0 16px; display: inline-flex; align-items: center; justify-content: center; width: 100%;">
+                View Invoice
+              </a>
+            </div>
+          </div>
+
+          <!-- Reservation Confirmation Voucher Card -->
+          <div style="border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 20px; background: #fafaf8; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span style="font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-forest); font-weight: 700;">Stay Confirmation</span>
+              </div>
+              <h4 style="font-family: var(--font-heading); font-size: 19px; color: var(--color-forest); margin: 0 0 8px;">View Voucher</h4>
+              <p style="font-size: 12.5px; color: var(--color-text-muted); line-height: 1.5; margin-bottom: 16px;">
+                Displays guest confirmation specifications, stay dates, room category, occupancy details, booking reference #{{ booking.booking_code }}, and check-in instructions.
+              </p>
+            </div>
+            <div>
+              <a href="{{ url_for('booking_confirmation', code=booking.booking_code) }}" class="btn btn-forest" style="height: 38px; font-size: 11.5px; padding: 0 16px; display: inline-flex; align-items: center; justify-content: center; width: 100%;">
+                View Voucher
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content 6: Cancellation -->
+      <div id="tab-cancel" class="tab-pane-content" style="display: none; padding: 28px;">
+        <h3 style="font-family: var(--font-heading); font-size: 22px; color: {% if booking.status == 'Cancelled' %}#991b1b{% else %}var(--color-forest){% endif %}; margin: 0 0 12px;">
+          Reservation Cancellation &amp; Refund Policy
+        </h3>
+        
+        {% if booking.status == 'Cancelled' %}
+          <div style="background: #fff5f5; border: 1px solid #fecaca; border-radius: var(--radius-sm); padding: 24px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+              <span class="badge" style="background: #fee2e2; color: #991b1b; font-size: 13px; font-weight: 700; padding: 4px 12px;">
+                Reservation Cancelled
+              </span>
+              <span style="font-size: 12px; color: var(--color-text-muted);">
+                Inventory has been released. No further room service or guest requests may be scheduled.
+              </span>
+            </div>
+
+            <!-- Refund Breakdown & Status -->
+            {% if refunds %}
+              <div style="margin-top: 16px; border-top: 1px solid #fed7d7; padding-top: 16px;">
+                <h4 style="font-family: var(--font-heading); font-size: 17px; color: var(--color-forest); margin: 0 0 12px;">
+                  Processed Refund Details
+                </h4>
+                {% for ref in refunds %}
+                  <div style="background: #ffffff; border: 1px solid #fca5a5; border-radius: 4px; padding: 14px 18px; margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
+                      <div>
+                        <strong class="reference-code numeric-value" style="color: var(--color-forest); font-size: 14px;">{{ ref.refund_ref }}</strong>
+                        <span class="badge" style="background: #dcfce7; color: #166534; font-size: 11px; margin-left: 8px;">{{ ref.refund_status }}</span>
+                      </div>
+                      <div class="currency-value numeric-value" style="font-size: 16px; font-weight: 700; color: #166534;">
+                        {{ ref.refund_amount|currency }}
+                      </div>
+                    </div>
+                    <div style="font-size: 12px; color: var(--color-text-secondary); line-height: 1.5;">
+                      <strong>Policy:</strong> {{ ref.reason }}<br>
+                      <strong>Calculation:</strong> Paid: {{ ref.total_paid|currency }} &bull; Eligible Deductions: {{ ref.eligible_charges|currency }} &bull; Penalty: {{ ref.cancellation_penalty|currency }}
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div style="margin-top: 12px; font-size: 13px; color: var(--color-text-secondary);">
+                {{ refund_preview.policy_description }} &bull; Status: <strong>{{ refund_preview.refund_status }}</strong>
+              </div>
+            {% endif %}
+          </div>
+
+        {% elif booking.status in ['Completed', 'Checked Out'] %}
+          <div style="background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: var(--radius-sm); padding: 20px; font-size: 13px; color: var(--color-text-muted);">
+            This reservation is currently <strong>{{ booking.status }}</strong>. Past fulfilled stays cannot be cancelled.
+          </div>
+
+        {% else %}
+          <!-- Active reservation cancellation options (Confirmed or Checked In early departure) -->
+          <div style="background: #fafaf8; border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 24px; margin-bottom: 20px;">
+            <div style="margin-bottom: 18px;">
+              <h4 style="font-family: var(--font-heading); font-size: 18px; color: var(--color-forest); margin: 0 0 6px;">
+                {% if booking.status == 'Checked In' %}Early Departure / Stay Cancellation{% else %}Cancellation &amp; Refund Preview{% endif %}
+              </h4>
+              <p style="font-size: 13px; color: var(--color-text-muted); margin: 0 0 14px; line-height: 1.5;">
+                {{ refund_preview.policy_description }}
+              </p>
+
+              <!-- Centralized Refund Rule Breakdown Box -->
+              <div style="background: #ffffff; border: 1px solid var(--color-border); border-radius: 4px; padding: 14px 18px; margin-bottom: 16px; font-size: 12.5px;">
+                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #f1f5f9;">
+                  <span>Total Paid to Date:</span>
+                  <strong class="currency-value numeric-value">{{ refund_preview.total_paid_fmt }}</strong>
+                </div>
+                {% if refund_preview.consumed_room_charges > 0 %}
+                  <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #f1f5f9; color: #854d0e;">
+                    <span>Consumed Room Tariff:</span>
+                    <strong class="currency-value numeric-value">- {{ refund_preview.consumed_room_charges_fmt }}</strong>
+                  </div>
+                {% endif %}
+                {% if refund_preview.completed_services_charge > 0 %}
+                  <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #f1f5f9; color: #854d0e;">
+                    <span>Completed Food &amp; Incidentals:</span>
+                    <strong class="currency-value numeric-value">- {{ refund_preview.completed_services_charge_fmt }}</strong>
+                  </div>
+                {% endif %}
+                {% if refund_preview.cancellation_penalty > 0 %}
+                  <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #f1f5f9; color: #991b1b;">
+                    <span>Cancellation Penalty (Within 48h):</span>
+                    <strong class="currency-value numeric-value">- {{ refund_preview.cancellation_penalty_fmt }}</strong>
+                  </div>
+                {% endif %}
+                <div style="display: flex; justify-content: space-between; padding: 8px 0 2px; font-size: 13.5px; color: var(--color-forest); font-weight: 700;">
+                  <span>Eligible Refund Amount:</span>
+                  <strong class="currency-value numeric-value" style="color: {% if refund_preview.refundable_amount > 0 %}#166534{% else %}var(--color-text-muted){% endif %};">
+                    {{ refund_preview.refundable_amount_fmt }}
+                  </strong>
+                </div>
+              </div>
+            </div>
+            
+            <form action="{{ url_for('cancel_customer_booking', booking_id=booking.id) }}" method="POST" onsubmit="return confirm('Are you sure you wish to cancel reservation {{ booking.booking_code }}? This will release inventory, cancel pending services, and process eligible refunds.');">
+              <button type="submit" class="btn btn-outline-light" style="height: 40px; padding: 0 20px; font-size: 12px; color: #991b1b; border-color: #fca5a5; background: #fff; font-weight: 600;">
+                Confirm Reservation Cancellation
+              </button>
+            </form>
+          </div>
+        {% endif %}
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<style>
+/* Desktop Tab Navigation Bar */
+.desktop-tab-nav-bar {
+  display: flex;
+  width: 100%;
+  border-bottom: 1px solid var(--color-border);
+  background: #fafaf8;
+  overflow: hidden; /* No scrollbar */
+  box-sizing: border-box;
+}
+
+.tab-nav-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 14px 10px;
+  background: transparent;
+  border: none;
+  font-family: var(--font-interface);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--color-forest);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+}
+
+.tab-nav-btn:hover {
+  color: var(--color-forest-dark);
+  background: rgba(21, 63, 50, 0.03);
+}
+
+.tab-nav-btn.active {
+  color: var(--color-forest);
+  font-weight: 600;
+  background: #ffffff;
+  border-bottom: 2px solid var(--color-gold);
+}
+
+/* Subtle red distinction for Cancellation tab */
+.tab-nav-btn.tab-cancel-btn {
+  color: #b91c1c;
+}
+
+.tab-nav-btn.tab-cancel-btn:hover {
+  color: #991b1b;
+  background: rgba(185, 28, 28, 0.04);
+}
+
+.tab-nav-btn.tab-cancel-btn.active {
+  color: #991b1b;
+  font-weight: 600;
+  border-bottom: 2px solid #b91c1c;
+}
+
+/* Mobile Dropdown Styling */
+.mobile-tab-dropdown-wrapper {
+  display: none;
+  padding: 16px 20px;
+  background: #fafaf8;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.mobile-tab-select {
+  width: 100%;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  padding: 0 12px;
+  font-family: var(--font-interface);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-forest);
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+/* Responsive breakpoint for mobile dropdown */
+@media (max-width: 768px) {
+  .desktop-tab-nav-bar {
+    display: none;
+  }
+  .mobile-tab-dropdown-wrapper {
+    display: block;
+  }
+}
+
+.meta-field-item {
+  margin-bottom: 12px;
+}
+
+.meta-label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.meta-val {
+  font-size: 14px;
+  color: var(--color-forest);
+}
+
+.badge-payment-unpaid { background: #fee2e2; color: #991b1b; }
+.badge-payment-partiallypaid { background: #fef3c7; color: #92400e; }
+.badge-payment-paid { background: #dcfce7; color: #166534; }
+</style>
+
+<script>
+function switchTab(tabId) {
+  // Hide all tab panes
+  document.querySelectorAll('.tab-pane-content').forEach(pane => {
+    pane.style.display = 'none';
+  });
+  // Deactivate all buttons
+  document.querySelectorAll('.tab-nav-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+
+  // Show selected pane
+  const activePane = document.getElementById(tabId);
+  if (activePane) {
+    activePane.style.display = 'block';
+  }
+  const activeBtn = document.getElementById('btn-' + tabId);
+  if (activeBtn) {
+    activeBtn.classList.add('active');
+  }
+
+  // Sync mobile dropdown if available
+  const mobileSelect = document.getElementById('mobileTabSelect');
+  if (mobileSelect && mobileSelect.value !== tabId) {
+    mobileSelect.value = tabId;
+  }
+}
+</script>
+
+<!-- Order Tracking Modal Dialog -->
+<div id="order-tracking-modal" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(13, 40, 32, 0.65); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px;">
+  <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); max-width: 560px; width: 100%; box-shadow: var(--shadow-lg); overflow: hidden; position: relative;">
+    
+    <!-- Modal Header -->
+    <div style="background: var(--color-forest); color: #FAF8F3; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-gold); font-weight: 600; margin-bottom: 2px;">
+          Food &amp; Room Service Tracking
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <h3 id="modal-order-ref" class="reference-code numeric-value" style="font-size: 20px; font-weight: 700; margin: 0; color: #FAF8F3;">
+            ORD-2026-XXXX
+          </h3>
+          <span id="modal-order-status-badge" class="badge" style="font-size: 11px; padding: 3px 8px;">
+            Placed
+          </span>
+        </div>
+      </div>
+      <button type="button" id="btn-close-tracking-modal" style="background: transparent; border: none; color: #FAF8F3; font-size: 24px; cursor: pointer; line-height: 1; padding: 4px 8px;">
+        &times;
+      </button>
+    </div>
+
+    <!-- Modal Content -->
+    <div style="padding: 24px; max-height: 75vh; overflow-y: auto;">
+      <!-- Billing Notice Alert -->
+      <div id="modal-billing-notice" style="margin-bottom: 20px; padding: 12px 16px; border-radius: var(--radius-sm); font-size: 12px; display: flex; align-items: center; justify-content: space-between;">
+        <span id="modal-billing-text">Pending Delivery (Not billed to folio yet)</span>
+        <span id="modal-order-total-header" class="currency-value numeric-value" style="font-size: 15px; font-weight: 700;">₹0</span>
+      </div>
+
+      <!-- 5-Stage Visual Progress Timeline -->
+      <div style="margin-bottom: 28px;">
+        <h4 style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-muted); margin: 0 0 16px;">
+          Order Progress Timeline
+        </h4>
+        <div id="modal-timeline-container" style="display: flex; flex-direction: column; gap: 0; position: relative;">
+          <!-- Dynamically filled by JavaScript -->
+        </div>
+      </div>
+
+      <!-- Itemized Order Items Breakdown -->
+      <div style="border-top: 1px solid var(--color-border); padding-top: 20px;">
+        <h4 style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-muted); margin: 0 0 12px;">
+          Ordered Items
+        </h4>
+        <div id="modal-items-list" style="display: flex; flex-direction: column; gap: 8px;">
+          <!-- Dynamically filled -->
+        </div>
+
+        <div style="margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--color-border); display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 13px; font-weight: 600; color: var(--color-text-dark);">Total Amount</span>
+          <span id="modal-items-total" class="currency-value numeric-value" style="font-size: 18px; font-weight: 700; color: var(--color-forest);">₹0</span>
+        </div>
+      </div>
+
+      <!-- Delivery Instructions -->
+      <div id="modal-notes-container" style="margin-top: 16px; padding: 12px; background: #fafaf8; border-radius: var(--radius-sm); border: 1px solid var(--color-border); font-size: 12px; display: none;">
+        <strong style="color: var(--color-forest);">Delivery Instructions:</strong>
+        <span id="modal-delivery-notes" style="color: var(--color-text-muted); margin-left: 6px;"></span>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div style="background: #fafaf8; padding: 14px 24px; border-top: 1px solid var(--color-border); display: flex; justify-content: flex-end;">
+      <button type="button" id="btn-close-tracking-footer" class="btn btn-outline-forest" style="height: 36px; padding: 0 16px; font-size: 12px;">
+        Close Tracker
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const modal = document.getElementById('order-tracking-modal');
+  const btnClose = document.getElementById('btn-close-tracking-modal');
+  const btnCloseFooter = document.getElementById('btn-close-tracking-footer');
+
+  function closeModal() {
+    modal.style.display = 'none';
+  }
+
+  if (btnClose) btnClose.addEventListener('click', closeModal);
+  if (btnCloseFooter) btnCloseFooter.addEventListener('click', closeModal);
+  if (modal) {
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) closeModal();
+    });
+  }
+
+  document.querySelectorAll('.btn-track-order').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const orderId = this.getAttribute('data-order-id');
+      if (!orderId) return;
+
+      fetch(`/api/food-orders/${orderId}/track`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.status !== 'success') {
+            alert(data.message || 'Unable to fetch order tracking status.');
+            return;
+          }
+
+          document.getElementById('modal-order-ref').textContent = data.order_ref;
+          const statusBadge = document.getElementById('modal-order-status-badge');
+          statusBadge.textContent = data.order_status;
+          statusBadge.className = 'badge badge-' + data.order_status.toLowerCase().replace(/ /g, '-');
+
+          const noticeBox = document.getElementById('modal-billing-notice');
+          const noticeText = document.getElementById('modal-billing-text');
+          const totalHeader = document.getElementById('modal-order-total-header');
+          totalHeader.textContent = data.total_amount_fmt;
+
+          if (data.is_delivered) {
+            noticeBox.style.background = '#dcfce7';
+            noticeBox.style.border = '1px solid #bbf7d0';
+            noticeBox.style.color = '#166534';
+            noticeText.innerHTML = '<strong>✓ Verified Delivered:</strong> Charges have been finalized into your room folio ledger.';
+          } else if (data.is_cancelled) {
+            noticeBox.style.background = '#fee2e2';
+            noticeBox.style.border = '1px solid #fecaca';
+            noticeBox.style.color = '#991b1b';
+            noticeText.innerHTML = '<strong>Order Cancelled:</strong> This order is cancelled and will not be charged to your folio.';
+          } else {
+            noticeBox.style.background = '#fef9c3';
+            noticeBox.style.border = '1px solid #fef08a';
+            noticeBox.style.color = '#854d0e';
+            noticeText.innerHTML = '<strong>Pending Delivery:</strong> This order will only be added to your folio ledger once delivered to your room.';
+          }
+
+          const timelineContainer = document.getElementById('modal-timeline-container');
+          timelineContainer.innerHTML = '';
+
+          data.steps.forEach((step, index) => {
+            const isLast = (index === data.steps.length - 1);
+            const stepDiv = document.createElement('div');
+            stepDiv.style.display = 'flex';
+            stepDiv.style.gap = '14px';
+            stepDiv.style.position = 'relative';
+
+            const indicatorCol = document.createElement('div');
+            indicatorCol.style.display = 'flex';
+            indicatorCol.style.flexDirection = 'column';
+            indicatorCol.style.alignItems = 'center';
+            indicatorCol.style.width = '24px';
+
+            const dot = document.createElement('div');
+            dot.style.width = '20px';
+            dot.style.height = '20px';
+            dot.style.borderRadius = '50%';
+            dot.style.display = 'flex';
+            dot.style.alignItems = 'center';
+            dot.style.justifyContent = 'center';
+            dot.style.fontSize = '11px';
+            dot.style.fontWeight = '700';
+
+            if (step.completed) {
+              dot.style.background = 'var(--color-forest)';
+              dot.style.color = '#FAF8F3';
+              dot.innerHTML = '✓';
+            } else {
+              dot.style.background = '#e5e7eb';
+              dot.style.color = '#9ca3af';
+              dot.innerHTML = '○';
+            }
+
+            indicatorCol.appendChild(dot);
+
+            if (!isLast) {
+              const line = document.createElement('div');
+              line.style.width = '2px';
+              line.style.flex = '1';
+              line.style.minHeight = '32px';
+              line.style.background = step.completed && data.steps[index+1].completed ? 'var(--color-forest)' : '#e5e7eb';
+              line.style.margin = '4px 0';
+              indicatorCol.appendChild(line);
+            }
+
+            const contentCol = document.createElement('div');
+            contentCol.style.paddingBottom = isLast ? '0' : '20px';
+            contentCol.style.flex = '1';
+
+            const stageTitle = document.createElement('div');
+            stageTitle.style.fontWeight = step.current ? '700' : (step.completed ? '600' : '500');
+            stageTitle.style.fontSize = '14px';
+            stageTitle.style.color = step.completed ? 'var(--color-forest)' : 'var(--color-text-muted)';
+            stageTitle.textContent = step.stage;
+
+            if (step.current) {
+              const currentTag = document.createElement('span');
+              currentTag.style.fontSize = '10px';
+              currentTag.style.background = 'var(--color-gold-soft)';
+              currentTag.style.color = 'var(--color-gold-dark)';
+              currentTag.style.border = '1px solid var(--color-gold-border)';
+              currentTag.style.padding = '1px 6px';
+              currentTag.style.borderRadius = '3px';
+              currentTag.style.marginLeft = '8px';
+              currentTag.textContent = 'CURRENT STAGE';
+              stageTitle.appendChild(currentTag);
+            }
+
+            contentCol.appendChild(stageTitle);
+
+            if (step.timestamp) {
+              const timeDiv = document.createElement('div');
+              timeDiv.className = 'date-value numeric-value';
+              timeDiv.style.fontSize = '11px';
+              timeDiv.style.color = 'var(--color-text-muted)';
+              timeDiv.style.marginTop = '2px';
+              timeDiv.textContent = step.timestamp;
+              contentCol.appendChild(timeDiv);
+            }
+
+            stepDiv.appendChild(indicatorCol);
+            stepDiv.appendChild(contentCol);
+            timelineContainer.appendChild(stepDiv);
+          });
+
+          const itemsList = document.getElementById('modal-items-list');
+          itemsList.innerHTML = '';
+          data.items.forEach(itm => {
+            const itemRow = document.createElement('div');
+            itemRow.style.display = 'flex';
+            itemRow.style.justifyContent = 'space-between';
+            itemRow.style.alignItems = 'center';
+            itemRow.style.fontSize = '13px';
+
+            const leftPart = document.createElement('div');
+            leftPart.innerHTML = `<strong>${itm.quantity}x</strong> ${itm.name}`;
+
+            const rightPart = document.createElement('div');
+            rightPart.className = 'currency-value numeric-value';
+            rightPart.style.fontWeight = '600';
+            rightPart.style.color = 'var(--color-forest)';
+            rightPart.textContent = '₹' + Number(itm.total).toLocaleString('en-IN');
+
+            itemRow.appendChild(leftPart);
+            itemRow.appendChild(rightPart);
+            itemsList.appendChild(itemRow);
+          });
+
+          document.getElementById('modal-items-total').textContent = data.total_amount_fmt;
+
+          const notesBox = document.getElementById('modal-notes-container');
+          if (data.delivery_notes) {
+            notesBox.style.display = 'block';
+            document.getElementById('modal-delivery-notes').textContent = data.delivery_notes;
+          } else {
+            notesBox.style.display = 'none';
+          }
+
+          modal.style.display = 'flex';
+        })
+        .catch(err => {
+          console.error(err);
+          alert('Failed to load order tracking details.');
+        });
+    });
+  });
+});
+
+function submitCustomerServiceRequest(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btn-submit-srv-req');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  const payload = {
+    booking_id: {{ booking.id }},
+    request_type: document.getElementById('req-service-type').value,
+    priority: document.getElementById('req-priority').value,
+    description: document.getElementById('req-description').value
+  };
+
+  fetch('{{ url_for("api_create_service_request") }}', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.status === 'success') {
+      alert(data.message);
+      document.getElementById('service-request-form-card').style.display = 'none';
+      document.getElementById('customer-service-request-form').reset();
+      window.location.reload();
+    } else {
+      alert(data.message || 'Failed to submit service request.');
+      btn.disabled = false;
+      btn.textContent = 'Submit Request';
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    alert('An unexpected error occurred.');
+    btn.disabled = false;
+    btn.textContent = 'Submit Request';
+  });
+}
+</script>
+{% endblock %}
+

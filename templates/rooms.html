@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Rooms & Availability | RETREAT — Hotel & Suites{% endblock %}
+
+{% block content %}
+<!-- Search Header Bar -->
+<section style="background: linear-gradient(rgba(8, 34, 25, 0.78), rgba(8, 34, 25, 0.88)), url('https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=2000&q=80') center/cover no-repeat; padding: 110px 0 50px; text-align: center; color: var(--warm-ivory);">
+  <div class="container">
+    <span class="hero-pretitle" style="justify-content: center; color: var(--champagne-gold);">REAL-TIME RATES & AVAILABILITY</span>
+    <h1 style="color: #ffffff; font-size: 38px; margin-bottom: 8px; font-family: var(--font-primary-heading);">Available Rooms & Suites</h1>
+    <p style="max-width: 620px; margin: 0 auto; color: rgba(252, 250, 246, 0.85); font-size: 14px;">
+      Showing live room availability for {{ nights }} night(s) from <strong>{{ check_in }}</strong> to <strong>{{ check_out }}</strong> for {{ adults }} adult(s).
+    </p>
+  </div>
+</section>
+
+<!-- Interactive Availability Search Bar -->
+<div style="background: #ffffff; border-bottom: 1px solid var(--ivory-border); box-shadow: 0 4px 14px rgba(0,0,0,0.04); position: sticky; top: var(--header-height); z-index: 100;">
+  <div class="container" style="padding: 14px 24px;">
+    <form action="{{ url_for('rooms_catalog') }}" method="GET" style="display: grid; grid-template-columns: 1.1fr 1.1fr 0.8fr 0.8fr 0.8fr auto; gap: 12px; align-items: flex-end;">
+      {% if current_category %}
+      <input type="hidden" name="category" value="{{ current_category }}">
+      {% endif %}
+      
+      <div>
+        <label class="form-label" style="font-size: 10px;">Check-In</label>
+        <input type="date" name="check_in" value="{{ check_in }}" required style="width: 100%; height: 38px; border: 1px solid var(--ivory-border); border-radius: 4px; padding: 0 10px; font-family: inherit; font-size: 13px;">
+      </div>
+
+      <div>
+        <label class="form-label" style="font-size: 10px;">Check-Out</label>
+        <input type="date" name="check_out" value="{{ check_out }}" required style="width: 100%; height: 38px; border: 1px solid var(--ivory-border); border-radius: 4px; padding: 0 10px; font-family: inherit; font-size: 13px;">
+      </div>
+
+      <div>
+        <label class="form-label" style="font-size: 10px;">Adults</label>
+        <select name="adults" style="width: 100%; height: 38px; border: 1px solid var(--ivory-border); border-radius: 4px; padding: 0 8px; font-family: inherit; font-size: 13px; background: #fff;">
+          {% for a in range(1, 9) %}
+          <option value="{{ a }}" {% if adults == a %}selected{% endif %}>{{ a }} Adult{{ 's' if a > 1 else '' }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label class="form-label" style="font-size: 10px;">Children</label>
+        <select name="children" style="width: 100%; height: 38px; border: 1px solid var(--ivory-border); border-radius: 4px; padding: 0 8px; font-family: inherit; font-size: 13px; background: #fff;">
+          {% for c in range(0, 5) %}
+          <option value="{{ c }}" {% if children == c %}selected{% endif %}>{{ c }} Child{{ 'ren' if c != 1 else '' }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label class="form-label" style="font-size: 10px;">Rooms</label>
+        <select name="rooms_count" style="width: 100%; height: 38px; border: 1px solid var(--ivory-border); border-radius: 4px; padding: 0 8px; font-family: inherit; font-size: 13px; background: #fff;">
+          {% for r_num in range(1, 6) %}
+          <option value="{{ r_num }}" {% if rooms_count == r_num %}selected{% endif %}>{{ r_num }} Room{{ 's' if r_num > 1 else '' }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <button type="submit" class="btn btn-gold" style="height: 38px; padding: 0 20px;">Update Search</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Category Filters -->
+<div class="container" style="padding-top: 24px;">
+  <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px;">
+    <a href="{{ url_for('rooms_catalog', check_in=check_in, check_out=check_out, adults=adults, children=children, rooms_count=rooms_count) }}" class="btn {% if not current_category or current_category == 'all' %}btn-forest{% else %}btn-outline-forest{% endif %}" style="height: 34px; padding: 0 14px; font-size: 11px;">All Categories</a>
+    <a href="{{ url_for('rooms_catalog', category='Standard', check_in=check_in, check_out=check_out, adults=adults, children=children, rooms_count=rooms_count) }}" class="btn {% if current_category == 'Standard' %}btn-forest{% else %}btn-outline-forest{% endif %}" style="height: 34px; padding: 0 14px; font-size: 11px;">Standard</a>
+    <a href="{{ url_for('rooms_catalog', category='Deluxe', check_in=check_in, check_out=check_out, adults=adults, children=children, rooms_count=rooms_count) }}" class="btn {% if current_category == 'Deluxe' %}btn-forest{% else %}btn-outline-forest{% endif %}" style="height: 34px; padding: 0 14px; font-size: 11px;">Deluxe</a>
+    <a href="{{ url_for('rooms_catalog', category='Executive Suite', check_in=check_in, check_out=check_out, adults=adults, children=children, rooms_count=rooms_count) }}" class="btn {% if current_category == 'Executive Suite' %}btn-forest{% else %}btn-outline-forest{% endif %}" style="height: 34px; padding: 0 14px; font-size: 11px;">Executive Suite</a>
+    <a href="{{ url_for('rooms_catalog', category='Premium Suite', check_in=check_in, check_out=check_out, adults=adults, children=children, rooms_count=rooms_count) }}" class="btn {% if current_category == 'Premium Suite' %}btn-forest{% else %}btn-outline-forest{% endif %}" style="height: 34px; padding: 0 14px; font-size: 11px;">Premium Suite</a>
+  </div>
+</div>
+
+<!-- Rooms List -->
+<section class="section" style="padding: 24px 0 80px;">
+  <div class="container">
+    <div class="rooms-grid">
+      {% for room in rooms %}
+      <div class="room-card" style="{% if room.is_sold_out %}opacity: 0.85;{% endif %}">
+        <div class="room-image-wrap">
+          <img src="{{ room.image_url }}" alt="{{ room.name }}">
+          
+          {% if room.is_sold_out %}
+            <span class="room-badge" style="background: rgba(185, 28, 28, 0.95); color: #fff;">Sold Out for Dates</span>
+          {% elif room.available_count <= 2 %}
+            <span class="room-badge" style="background: rgba(180, 83, 9, 0.95); color: #fff;">Only {{ room.available_count }} left!</span>
+          {% elif room.badge %}
+            <span class="room-badge">{{ room.badge }}</span>
+          {% endif %}
+
+          <div class="room-price-tag">
+            <span class="amount">{{ room.price_per_night|currency }}</span>
+            <span class="period">/ night</span>
+          </div>
+        </div>
+
+        <div class="room-body">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px;">
+            <div class="room-category">{{ room.category }}</div>
+            <span style="font-size: 11px; font-weight: 600; color: {% if room.available_count > 0 %}#0e6245{% else %}#b91c1c{% endif %};">
+              {{ room.available_count }} available
+            </span>
+          </div>
+
+          <h3 class="room-title">{{ room.name }}</h3>
+          <p class="room-tagline">{{ room.tagline }}</p>
+
+          <div class="room-meta">
+            <div class="room-meta-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <span>Max {{ room.max_occupancy or room.capacity_adults }} Guests / Room</span>
+            </div>
+            <div class="room-meta-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
+              <span>{{ room.size_sqft }} sq ft</span>
+            </div>
+            <div class="room-meta-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              <span>{{ room.rating }}</span>
+            </div>
+          </div>
+
+          <!-- Dynamic Pricing Estimate based on Search -->
+          <div style="background: var(--gold-soft); padding: 8px 12px; border-radius: 4px; margin-bottom: 14px; font-size: 12px; border: 1px solid var(--gold-border);">
+            <div style="display: flex; justify-content: space-between; font-weight: 600; color: var(--forest-dark);">
+              <span>{{ nights }} night(s), {{ rooms_count }} room(s):</span>
+              <span>{{ room.pricing.total_amount_fmt }}</span>
+            </div>
+            {% if room.pricing.extra_adults > 0 %}
+            <div style="font-size: 11px; color: var(--forest-muted); margin-top: 2px;">
+              Includes additional guest surcharge: {{ room.pricing.additional_guest_charges_fmt }}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="room-amenities-pills">
+            {% for feat in room.features.split(',')[:4] %}
+            <span class="amenity-pill">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              {{ feat }}
+            </span>
+            {% endfor %}
+          </div>
+
+          <div class="room-footer">
+            <a href="{{ url_for('room_detail', room_id=room.id, check_in=check_in, check_out=check_out, adults=adults, children=children, rooms_count=rooms_count) }}" class="link-arrow">
+              Room Details
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </a>
+
+            {% if room.capacity_exceeded %}
+              <button class="btn btn-outline-forest" style="height: 36px; padding: 0 14px; opacity: 0.6; cursor: not-allowed;" title="Guest count exceeds maximum capacity for {{ rooms_count }} room(s)">
+                Exceeds Capacity
+              </button>
+            {% elif room.is_sold_out %}
+              <button class="btn btn-outline-forest" style="height: 36px; padding: 0 14px; opacity: 0.5; cursor: not-allowed;" disabled>
+                Unavailable
+              </button>
+            {% else %}
+              <a href="{{ url_for('booking_flow', room_id=room.id, check_in=check_in, check_out=check_out, adults=adults, children=children, rooms_count=rooms_count) }}" class="btn btn-gold" style="height: 36px; padding: 0 18px;">
+                Select & Book
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

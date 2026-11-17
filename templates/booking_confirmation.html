@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Reservation Confirmed — {{ booking.booking_code }} | RETREAT{% endblock %}
+
+{% block content %}
+<section style="padding-top: calc(var(--header-height) + 30px); padding-bottom: 80px; background: var(--warm-ivory);">
+  <div class="container" style="max-width: 820px;">
+    
+    <!-- Success Banner -->
+    <div style="background: #ffffff; border: 1px solid var(--gold-border); border-radius: var(--radius-md); padding: 36px 32px; box-shadow: var(--shadow-md); margin-bottom: 24px; text-align: center;">
+      <div style="width: 56px; height: 56px; border-radius: 50%; background: #e2f4ed; color: #0e6245; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 14px;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      </div>
+
+      <span class="section-subtitle">Reservation Confirmed</span>
+      <h1 style="font-family: var(--font-primary-heading); font-size: 32px; color: var(--forest-dark); margin: 4px 0 10px;">
+        Thank You, {{ booking.guest_name }}
+      </h1>
+      <p style="font-size: 14px; color: var(--text-muted); max-width: 540px; margin: 0 auto 20px;">
+        Your reservation has been recorded in our front desk ledger. A confirmation voucher has been transmitted to <strong>{{ booking.guest_email }}</strong>.
+      </p>
+
+      <div style="background: var(--gold-soft); border: 1px dashed var(--champagne-gold); border-radius: 6px; padding: 12px 20px; display: inline-block;">
+        <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--forest-muted); font-weight: 700; display: block;">Booking Reference</span>
+        <strong style="font-family: var(--font-interface); font-size: 22px; color: var(--forest-dark); letter-spacing: 0.05em;">{{ booking.booking_code }}</strong>
+      </div>
+    </div>
+
+    <!-- Structured Folio Breakdown Card -->
+    <div style="background: #ffffff; border: 1px solid var(--ivory-border); border-radius: var(--radius-md); padding: 28px; box-shadow: var(--shadow-sm); margin-bottom: 24px;">
+      <h3 style="font-family: var(--font-primary-heading); font-size: 22px; color: var(--forest-dark); margin-bottom: 16px; border-bottom: 1px solid var(--ivory-border); padding-bottom: 10px;">
+        Booking Folio Summary
+      </h3>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 13px; margin-bottom: 24px;">
+        <div>
+          <span style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block;">Accommodations</span>
+          <strong style="font-size: 15px; color: var(--forest-dark);">{{ booking.room_name }}</strong>
+          <div style="color: var(--text-secondary); margin-top: 2px;">{{ booking.rooms_count }} Room(s) &bull; {{ booking.size_sqft or 300 }} sq ft</div>
+        </div>
+
+        <div>
+          <span style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block;">Reservation Status</span>
+          <div style="margin-top: 2px;">
+            <span class="badge badge-confirmed">{{ booking.status }}</span>
+            <span style="margin-left: 6px; font-size: 11px; color: var(--text-muted); background: var(--ivory-surface); padding: 3px 6px; border-radius: 4px;">{{ booking.payment_status }}</span>
+          </div>
+        </div>
+
+        <div>
+          <span style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block;">Check-In Date</span>
+          <strong style="color: var(--forest-dark);">{{ booking.check_in }}</strong> (From 2:00 PM)
+        </div>
+
+        <div>
+          <span style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block;">Check-Out Date</span>
+          <strong style="color: var(--forest-dark);">{{ booking.check_out }}</strong> (Until 11:00 AM)
+        </div>
+
+        <div>
+          <span style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block;">Total Stay Duration</span>
+          <strong>{{ booking.total_nights }} Night(s)</strong>
+        </div>
+
+        <div>
+          <span style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block;">Guests Registered</span>
+          <strong>{{ booking.guests_adults }} Adults, {{ booking.guests_children }} Child</strong>
+        </div>
+
+        <div>
+          <span style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block;">Meal Plan Package</span>
+          <strong>{{ booking.meal_plan or 'Room Only' }}</strong>
+        </div>
+
+        <div>
+          <span style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block;">Guest Contact</span>
+          <span>{{ booking.guest_phone or 'Not provided' }}</span>
+        </div>
+      </div>
+
+      <!-- Financial Summary Table -->
+      <div style="background: var(--ivory-surface); border-radius: 6px; padding: 18px 20px; font-size: 13px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+          <span>Base Room Stay ({{ booking.total_nights }}n &times; {{ booking.rooms_count }} room):</span>
+          <span>{{ (booking.base_room_charges or booking.total_price)|currency }}</span>
+        </div>
+
+        {% if booking.extra_guest_charges and booking.extra_guest_charges > 0 %}
+        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; color: var(--forest-muted);">
+          <span>Additional Guest Surcharge:</span>
+          <span>{{ booking.extra_guest_charges|currency }}</span>
+        </div>
+        {% endif %}
+
+        {% if booking.meal_plan_charge and booking.meal_plan_charge > 0 %}
+        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+          <span>Meal Plan Charges ({{ booking.meal_plan }}):</span>
+          <span>{{ booking.meal_plan_charge|currency }}</span>
+        </div>
+        {% endif %}
+
+        <div style="border-top: 1px solid var(--ivory-border); padding-top: 10px; margin-top: 6px; display: flex; justify-content: space-between; font-weight: 700; color: var(--forest-dark); font-size: 17px;">
+          <span>Total Booking Amount (INR):</span>
+          <span>{{ booking.total_price|currency }}</span>
+        </div>
+      </div>
+
+      {% if booking.special_requests %}
+      <div style="margin-top: 18px; font-size: 12px; color: var(--text-secondary); background: #fff; border: 1px solid var(--ivory-border); padding: 12px; border-radius: 4px;">
+        <strong>Notes / Special Requests:</strong> {{ booking.special_requests }}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Actions & Links -->
+    <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;">
+      <a href="{{ url_for('my_bookings') }}" class="btn btn-gold">
+        View In My Bookings
+      </a>
+      <a href="{{ url_for('rooms_catalog') }}" class="btn btn-outline-forest">
+        Book Another Room
+      </a>
+      <button onclick="window.print()" class="btn btn-outline-forest">
+        Print Confirmation Voucher
+      </button>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+

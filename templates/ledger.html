@@ -1,0 +1,587 @@
+{% extends "base.html" %}
+
+{% block title %}Expense Ledger & Folio — {{ booking.booking_code }} — RETREAT Hotel & Suites{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Dedicated Expense Ledger Typography Tokens */
+.ledger-summary-card {
+  background: #ffffff;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.ledger-summary-label {
+  font-family: var(--font-interface);
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  display: block;
+  margin-bottom: 6px;
+}
+
+.ledger-summary-val {
+  font-family: var(--font-interface);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-forest);
+  font-feature-settings: "tnum" 1;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.ledger-summary-sub {
+  font-family: var(--font-interface);
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-top: 6px;
+}
+
+.ledger-currency-tnum {
+  font-family: var(--font-interface) !important;
+  font-feature-settings: "tnum" 1;
+  font-variant-numeric: tabular-nums;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<section style="padding-top: calc(var(--header-height) + 28px); padding-bottom: 80px; background: var(--color-ivory); min-height: 85vh;">
+  <div class="container" style="max-width: 1080px;">
+
+    <!-- Breadcrumb & Back -->
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; flex-wrap: wrap; gap: 12px;">
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-text-muted);">
+        <a href="{{ url_for('my_bookings') }}" style="color: var(--color-forest); text-decoration: none; font-weight: 500;">My Reservations</a>
+        <span>/</span>
+        <span style="color: var(--color-gold); font-weight: 600;">Folio #{{ booking.booking_code }}</span>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <a href="{{ url_for('booking_payments', booking_id=booking.id) }}" class="btn btn-outline-forest" style="height: 36px; padding: 0 16px; font-size: 11px;">
+          Make Payment
+        </a>
+        <a href="{{ url_for('food_menu', booking_id=booking.id) }}" class="btn btn-outline-forest" style="height: 36px; padding: 0 16px; font-size: 11px;">
+          Order Room Service
+        </a>
+        <a href="{{ url_for('checkout_billing', booking_id=booking.id) }}" class="btn btn-gold" style="height: 36px; padding: 0 16px; font-size: 11px;">
+          Checkout &amp; Bill
+        </a>
+      </div>
+    </div>
+
+    <!-- Header Card -->
+    <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 24px; margin-bottom: 24px; box-shadow: var(--shadow-sm);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+        <div>
+          <span class="section-subtitle">Guest Expense Ledger</span>
+          <h1 style="font-family: var(--font-heading); font-size: 28px; color: var(--color-forest); margin: 4px 0 6px;">
+            Itemized Folio Statement
+          </h1>
+          <p style="font-size: 13px; color: var(--color-text-muted); margin: 0;">
+            Stay Dates: <strong>{{ booking.check_in }} &rarr; {{ booking.check_out }}</strong> ({{ booking.total_nights }} nights) &bull; Guest: <strong>{{ booking.guest_name }}</strong> &bull; Room: <strong>{{ booking.room_name }}</strong>
+          </p>
+        </div>
+        <div style="text-align: right;">
+          <span class="badge badge-{{ financials.payment_status|lower|replace(' ', '') }}" style="font-size: 13px; padding: 6px 14px; text-transform: uppercase; letter-spacing: 0.5px;">
+            {{ financials.payment_status }}
+          </span>
+          <div style="font-size: 12px; color: var(--color-text-muted); margin-top: 6px;">
+            Booking Status: <strong>{{ booking.status }}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Financial Summary Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 28px;">
+      
+      <!-- Room Tariff -->
+      <div class="ledger-summary-card">
+        <span class="ledger-summary-label">Room Charges</span>
+        <div class="ledger-summary-val">
+          {{ financials.room_charges_formatted }}
+        </div>
+        <div class="ledger-summary-sub">Base tariff &amp; occupancy</div>
+      </div>
+
+      <!-- Additional Services / Room Service -->
+      <div class="ledger-summary-card">
+        <span class="ledger-summary-label">Services &amp; Dining</span>
+        <div class="ledger-summary-val">
+          {{ (financials.additional_expenses_total + financials.expense_breakdown['Meal Plan'])|currency }}
+        </div>
+        <div class="ledger-summary-sub">Meals, room service &amp; extras</div>
+      </div>
+
+      <!-- Total Paid -->
+      <div class="ledger-summary-card">
+        <span class="ledger-summary-label" style="color: #166534;">Total Payments</span>
+        <div class="ledger-summary-val" style="color: #166534;">
+          {{ financials.total_paid_formatted }}
+        </div>
+        <div class="ledger-summary-sub">{{ payments|length }} payment(s) cleared</div>
+      </div>
+
+      <!-- Outstanding Balance -->
+      <div class="ledger-summary-card" style="background: {% if financials.outstanding_balance > 0 %}#fffbeb{% else %}#f0fdf4{% endif %}; border-color: {% if financials.outstanding_balance > 0 %}#fef08a{% else %}#bbf7d0{% endif %};">
+        <span class="ledger-summary-label" style="color: {% if financials.outstanding_balance > 0 %}#854d0e{% else %}#166534{% endif %};">Remaining Balance</span>
+        <div class="ledger-summary-val" style="color: {% if financials.outstanding_balance > 0 %}#991b1b{% else %}#166534{% endif %}; font-weight: 700;">
+          {{ financials.outstanding_balance_formatted }}
+        </div>
+        <div class="ledger-summary-sub">
+          {% if financials.outstanding_balance > 0 %}
+            <a href="{{ url_for('booking_payments', booking_id=booking.id) }}" class="btn-settle-cta">Settle Now</a>
+          {% else %}
+            Settled in full
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Finalized Ledger Expenses Table -->
+    <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 24px; margin-bottom: 24px; box-shadow: var(--shadow-sm);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div>
+          <h2 style="font-family: var(--font-heading); font-size: 20px; color: var(--color-forest); margin: 0 0 4px;">
+            Itemized Finalized Charges
+          </h2>
+          <p style="font-size: 12px; color: var(--color-text-muted); margin: 0;">
+            Every finalized billable item charged to your room folio.
+          </p>
+        </div>
+        <span style="font-size: 12px; color: var(--color-text-muted); font-weight: 500;">
+          {{ expenses|length }} entries
+        </span>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px; font-family: var(--font-interface);">
+          <thead>
+            <tr style="border-bottom: 2px solid var(--color-border); text-align: left; color: var(--color-forest); font-weight: 600;">
+              <th style="padding: 10px 12px; font-size: 12px; font-weight: 600;">Ref #</th>
+              <th style="padding: 10px 12px; font-size: 12px; font-weight: 600;">Category</th>
+              <th style="padding: 10px 12px; font-size: 12px; font-weight: 600;">Description</th>
+              <th style="padding: 10px 12px; text-align: center; font-size: 12px; font-weight: 600;">Qty</th>
+              <th style="padding: 10px 12px; text-align: right; font-size: 12px; font-weight: 600;">Unit Price</th>
+              <th style="padding: 10px 12px; text-align: right; font-size: 12px; font-weight: 600;">Total</th>
+              <th style="padding: 10px 12px; text-align: center; font-size: 12px; font-weight: 600;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for exp in expenses %}
+              <tr style="border-bottom: 1px solid var(--color-border);">
+                <td style="padding: 12px;">
+                  <span class="reference-code numeric-value" style="font-size: 12px; color: var(--color-forest);">{{ exp.expense_ref }}</span>
+                </td>
+                <td style="padding: 12px;">
+                  <span style="font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;
+                    {% if exp.category == 'Room Charges' %}background: #e0f2fe; color: #0369a1;
+                    {% elif exp.category == 'Meal Plan' %}background: #fef3c7; color: #92400e;
+                    {% elif exp.category == 'Room Service' %}background: #ffedd5; color: #c2410c;
+                    {% else %}background: #f1f5f9; color: #475569;{% endif %}">
+                    {{ exp.category }}
+                  </span>
+                </td>
+                <td style="padding: 12px; color: var(--color-forest); font-weight: 500; font-size: 13px;">
+                  {{ exp.description }}
+                </td>
+                <td style="padding: 12px; text-align: center; color: var(--color-text-secondary); font-size: 13px; font-feature-settings: 'tnum' 1;">
+                  {{ exp.quantity }}
+                </td>
+                <td style="padding: 12px; text-align: right; color: var(--color-text-secondary); font-size: 13px; font-feature-settings: 'tnum' 1;" class="ledger-currency-tnum">
+                  {{ exp.unit_price|currency }}
+                </td>
+                <td style="padding: 12px; text-align: right; font-weight: 600; color: var(--color-forest); font-size: 14px; font-feature-settings: 'tnum' 1;" class="ledger-currency-tnum">
+                  {{ exp.total_amount|currency }}
+                </td>
+                <td style="padding: 12px; text-align: center;">
+                  <span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #dcfce7; color: #166534; font-weight: 600;">
+                    {{ exp.expense_status }}
+                  </span>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="7" style="padding: 32px; text-align: center; color: var(--color-text-muted); font-size: 13px;">
+                  No billable ledger charges recorded for this reservation.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr style="background: #fafaf8; border-top: 2px solid var(--color-border);">
+              <td colspan="5" style="padding: 14px 12px; text-align: right; color: var(--color-forest); font-weight: 600; font-size: 13px;">
+                Subtotal (Total Charges):
+              </td>
+              <td style="padding: 14px 12px; text-align: right; font-size: 14px; font-weight: 600; color: var(--color-forest);" class="ledger-currency-tnum">
+                {{ financials.total_charges_formatted }}
+              </td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Active & Historical Room Service Orders (Lifecycle Tracker) -->
+    <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 24px; margin-bottom: 24px; box-shadow: var(--shadow-sm);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div>
+          <h2 style="font-family: var(--font-heading); font-size: 20px; color: var(--color-forest); margin: 0 0 4px;">
+            Food &amp; Room Service Order Lifecycle
+          </h2>
+          <p style="font-size: 12px; color: var(--color-text-muted); margin: 0;">
+            Delivered orders are automatically finalized into your ledger above. Placed/Preparing orders remain pending.
+          </p>
+        </div>
+        <a href="{{ url_for('food_menu', booking_id=booking.id) }}" class="btn btn-outline-forest" style="font-size: 11px; height: 32px; padding: 0 12px;">
+          New Food Order
+        </a>
+      </div>
+
+      {% if orders %}
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          {% for ord in orders %}
+            <div style="border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 16px; background: #fafaf8; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+              <div style="flex: 1; min-width: 260px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap;">
+                  <span class="reference-code numeric-value" style="font-size: 15px; color: var(--color-forest); font-weight: 700;">
+                    {{ ord.order_ref }}
+                  </span>
+                  <span class="badge badge-{{ ord.order_status|lower|replace(' ', '-') }}" style="font-size: 11px; padding: 2px 8px; font-weight: 600;">
+                    {{ ord.order_status }}
+                  </span>
+                  {% if ord.order_status == 'Delivered' %}
+                    <span style="font-size: 11px; color: #166534; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                      <span style="font-size: 13px;">✓</span> Finalized in Ledger
+                    </span>
+                  {% elif ord.order_status == 'Cancelled' %}
+                    <span style="font-size: 11px; color: #991b1b; font-weight: 500;">Excluded from Ledger</span>
+                  {% else %}
+                    <span style="font-size: 11px; color: #854d0e; font-weight: 500; background: #fef9c3; padding: 2px 8px; border-radius: 4px; border: 1px solid #fef08a;">
+                      Pending Delivery (Not billed yet)
+                    </span>
+                  {% endif %}
+                </div>
+
+                <div class="date-value numeric-value" style="font-size: 12px; color: var(--color-text-muted); margin-bottom: 4px;">
+                  Placed: {{ ord.order_date }}
+                </div>
+
+                {% if ord.delivery_notes %}
+                  <div style="font-size: 12px; color: var(--color-text-secondary); margin-top: 2px;">
+                    Special Notes: <em>{{ ord.delivery_notes }}</em>
+                  </div>
+                {% endif %}
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 18px;">
+                <div style="text-align: right;">
+                  <div class="currency-value numeric-value" style="font-size: 16px; font-weight: 700; color: var(--color-forest);">
+                    {{ ord.total_amount|currency }}
+                  </div>
+                  {% if ord.order_status != 'Delivered' and ord.order_status != 'Cancelled' %}
+                    <div style="font-size: 10px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.04em;">Pending Billed</div>
+                  {% elif ord.order_status == 'Delivered' %}
+                    <div style="font-size: 10px; color: #166534; text-transform: uppercase; letter-spacing: 0.04em;">Billed</div>
+                  {% endif %}
+                </div>
+
+                <button type="button" class="btn btn-outline-forest btn-track-order" data-order-id="{{ ord.id }}" style="height: 34px; padding: 0 14px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;">
+                  Track Order
+                </button>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div style="text-align: center; padding: 36px 16px; background: #fafaf8; border-radius: var(--radius-sm); border: 1px dashed var(--color-border);">
+          <div style="font-size: 13px; color: var(--color-text-muted); margin-bottom: 12px;">No room service orders requested yet for this stay.</div>
+          <a href="{{ url_for('food_menu', booking_id=booking.id) }}" class="btn btn-outline-forest" style="font-size: 11px; height: 32px;">
+            Browse Dining &amp; Room Service Menu
+          </a>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+</section>
+
+<!-- Order Tracking Modal Dialog -->
+<div id="order-tracking-modal" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(13, 40, 32, 0.65); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px;">
+  <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); max-width: 560px; width: 100%; box-shadow: var(--shadow-lg); overflow: hidden; position: relative;">
+    
+    <!-- Modal Header -->
+    <div style="background: var(--color-forest); color: #FAF8F3; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-gold); font-weight: 600; margin-bottom: 2px;">
+          Food &amp; Room Service Tracking
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <h3 id="modal-order-ref" class="reference-code numeric-value" style="font-size: 20px; font-weight: 700; margin: 0; color: #FAF8F3;">
+            ORD-2026-XXXX
+          </h3>
+          <span id="modal-order-status-badge" class="badge" style="font-size: 11px; padding: 3px 8px;">
+            Placed
+          </span>
+        </div>
+      </div>
+      <button type="button" id="btn-close-tracking-modal" style="background: transparent; border: none; color: #FAF8F3; font-size: 24px; cursor: pointer; line-height: 1; padding: 4px 8px;">
+        &times;
+      </button>
+    </div>
+
+    <!-- Modal Content -->
+    <div style="padding: 24px; max-height: 75vh; overflow-y: auto;">
+      <!-- Billing Notice Alert -->
+      <div id="modal-billing-notice" style="margin-bottom: 20px; padding: 12px 16px; border-radius: var(--radius-sm); font-size: 12px; display: flex; align-items: center; justify-content: space-between;">
+        <span id="modal-billing-text">Pending Delivery (Not billed to folio yet)</span>
+        <span id="modal-order-total-header" class="currency-value numeric-value" style="font-size: 15px; font-weight: 700;">₹0</span>
+      </div>
+
+      <!-- 5-Stage Visual Progress Timeline -->
+      <div style="margin-bottom: 28px;">
+        <h4 style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-muted); margin: 0 0 16px;">
+          Order Progress Timeline
+        </h4>
+        <div id="modal-timeline-container" style="display: flex; flex-direction: column; gap: 0; position: relative;">
+          <!-- Dynamically filled by JavaScript -->
+        </div>
+      </div>
+
+      <!-- Itemized Order Items Breakdown -->
+      <div style="border-top: 1px solid var(--color-border); padding-top: 20px;">
+        <h4 style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-muted); margin: 0 0 12px;">
+          Ordered Items
+        </h4>
+        <div id="modal-items-list" style="display: flex; flex-direction: column; gap: 8px;">
+          <!-- Dynamically filled -->
+        </div>
+
+        <div style="margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--color-border); display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 13px; font-weight: 600; color: var(--color-text-dark);">Total Amount</span>
+          <span id="modal-items-total" class="currency-value numeric-value" style="font-size: 18px; font-weight: 700; color: var(--color-forest);">₹0</span>
+        </div>
+      </div>
+
+      <!-- Delivery Instructions -->
+      <div id="modal-notes-container" style="margin-top: 16px; padding: 12px; background: #fafaf8; border-radius: var(--radius-sm); border: 1px solid var(--color-border); font-size: 12px; display: none;">
+        <strong style="color: var(--color-forest);">Delivery Instructions:</strong>
+        <span id="modal-delivery-notes" style="color: var(--color-text-muted); margin-left: 6px;"></span>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div style="background: #fafaf8; padding: 14px 24px; border-top: 1px solid var(--color-border); display: flex; justify-content: flex-end;">
+      <button type="button" id="btn-close-tracking-footer" class="btn btn-outline-forest" style="height: 36px; padding: 0 16px; font-size: 12px;">
+        Close Tracker
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const modal = document.getElementById('order-tracking-modal');
+  const btnClose = document.getElementById('btn-close-tracking-modal');
+  const btnCloseFooter = document.getElementById('btn-close-tracking-footer');
+
+  function closeModal() {
+    modal.style.display = 'none';
+  }
+
+  if (btnClose) btnClose.addEventListener('click', closeModal);
+  if (btnCloseFooter) btnCloseFooter.addEventListener('click', closeModal);
+  if (modal) {
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) closeModal();
+    });
+  }
+
+  document.querySelectorAll('.btn-track-order').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const orderId = this.getAttribute('data-order-id');
+      if (!orderId) return;
+
+      // Fetch tracking data
+      fetch(`/api/food-orders/${orderId}/track`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.status !== 'success') {
+            alert(data.message || 'Unable to fetch order tracking status.');
+            return;
+          }
+
+          document.getElementById('modal-order-ref').textContent = data.order_ref;
+          const statusBadge = document.getElementById('modal-order-status-badge');
+          statusBadge.textContent = data.order_status;
+          statusBadge.className = 'badge badge-' + data.order_status.toLowerCase().replace(/ /g, '-');
+
+          // Notice style
+          const noticeBox = document.getElementById('modal-billing-notice');
+          const noticeText = document.getElementById('modal-billing-text');
+          const totalHeader = document.getElementById('modal-order-total-header');
+          totalHeader.textContent = data.total_amount_fmt;
+
+          if (data.is_delivered) {
+            noticeBox.style.background = '#dcfce7';
+            noticeBox.style.border = '1px solid #bbf7d0';
+            noticeBox.style.color = '#166534';
+            noticeText.innerHTML = '<strong>✓ Verified Delivered:</strong> Charges have been finalized into your room folio ledger.';
+          } else if (data.is_cancelled) {
+            noticeBox.style.background = '#fee2e2';
+            noticeBox.style.border = '1px solid #fecaca';
+            noticeBox.style.color = '#991b1b';
+            noticeText.innerHTML = '<strong>Order Cancelled:</strong> This order is cancelled and will not be charged to your folio.';
+          } else {
+            noticeBox.style.background = '#fef9c3';
+            noticeBox.style.border = '1px solid #fef08a';
+            noticeBox.style.color = '#854d0e';
+            noticeText.innerHTML = '<strong>Pending Delivery:</strong> This order will only be added to your folio ledger once delivered to your room.';
+          }
+
+          // Build timeline
+          const timelineContainer = document.getElementById('modal-timeline-container');
+          timelineContainer.innerHTML = '';
+
+          data.steps.forEach((step, index) => {
+            const isLast = (index === data.steps.length - 1);
+            const stepDiv = document.createElement('div');
+            stepDiv.style.display = 'flex';
+            stepDiv.style.gap = '14px';
+            stepDiv.style.position = 'relative';
+
+            // Left indicator column
+            const indicatorCol = document.createElement('div');
+            indicatorCol.style.display = 'flex';
+            indicatorCol.style.flexDirection = 'column';
+            indicatorCol.style.alignItems = 'center';
+            indicatorCol.style.width = '24px';
+
+            const dot = document.createElement('div');
+            dot.style.width = '20px';
+            dot.style.height = '20px';
+            dot.style.borderRadius = '50%';
+            dot.style.display = 'flex';
+            dot.style.alignItems = 'center';
+            dot.style.justifyContent = 'center';
+            dot.style.fontSize = '11px';
+            dot.style.fontWeight = '700';
+
+            if (step.completed) {
+              dot.style.background = 'var(--color-forest)';
+              dot.style.color = '#FAF8F3';
+              dot.innerHTML = '✓';
+            } else {
+              dot.style.background = '#e5e7eb';
+              dot.style.color = '#9ca3af';
+              dot.innerHTML = '○';
+            }
+
+            indicatorCol.appendChild(dot);
+
+            if (!isLast) {
+              const line = document.createElement('div');
+              line.style.width = '2px';
+              line.style.flex = '1';
+              line.style.minHeight = '32px';
+              line.style.background = step.completed && data.steps[index+1].completed ? 'var(--color-forest)' : '#e5e7eb';
+              line.style.margin = '4px 0';
+              indicatorCol.appendChild(line);
+            }
+
+            // Right label column
+            const contentCol = document.createElement('div');
+            contentCol.style.paddingBottom = isLast ? '0' : '20px';
+            contentCol.style.flex = '1';
+
+            const stageTitle = document.createElement('div');
+            stageTitle.style.fontWeight = step.current ? '700' : (step.completed ? '600' : '500');
+            stageTitle.style.fontSize = '14px';
+            stageTitle.style.color = step.completed ? 'var(--color-forest)' : 'var(--color-text-muted)';
+            stageTitle.textContent = step.stage;
+
+            if (step.current) {
+              const currentTag = document.createElement('span');
+              currentTag.style.fontSize = '10px';
+              currentTag.style.background = 'var(--color-gold-soft)';
+              currentTag.style.color = 'var(--color-gold-dark)';
+              currentTag.style.border = '1px solid var(--color-gold-border)';
+              currentTag.style.padding = '1px 6px';
+              currentTag.style.borderRadius = '3px';
+              currentTag.style.marginLeft = '8px';
+              currentTag.textContent = 'CURRENT STAGE';
+              stageTitle.appendChild(currentTag);
+            }
+
+            contentCol.appendChild(stageTitle);
+
+            if (step.timestamp) {
+              const timeDiv = document.createElement('div');
+              timeDiv.className = 'date-value numeric-value';
+              timeDiv.style.fontSize = '11px';
+              timeDiv.style.color = 'var(--color-text-muted)';
+              timeDiv.style.marginTop = '2px';
+              timeDiv.textContent = step.timestamp;
+              contentCol.appendChild(timeDiv);
+            }
+
+            stepDiv.appendChild(indicatorCol);
+            stepDiv.appendChild(contentCol);
+            timelineContainer.appendChild(stepDiv);
+          });
+
+          // Items list
+          const itemsList = document.getElementById('modal-items-list');
+          itemsList.innerHTML = '';
+          data.items.forEach(itm => {
+            const itemRow = document.createElement('div');
+            itemRow.style.display = 'flex';
+            itemRow.style.justifyContent = 'space-between';
+            itemRow.style.alignItems = 'center';
+            itemRow.style.fontSize = '13px';
+
+            const leftPart = document.createElement('div');
+            leftPart.innerHTML = `<strong>${itm.quantity}x</strong> ${itm.name}`;
+
+            const rightPart = document.createElement('div');
+            rightPart.className = 'currency-value numeric-value';
+            rightPart.style.fontWeight = '600';
+            rightPart.style.color = 'var(--color-forest)';
+            rightPart.textContent = '₹' + Number(itm.total).toLocaleString('en-IN');
+
+            itemRow.appendChild(leftPart);
+            itemRow.appendChild(rightPart);
+            itemsList.appendChild(itemRow);
+          });
+
+          document.getElementById('modal-items-total').textContent = data.total_amount_fmt;
+
+          const notesBox = document.getElementById('modal-notes-container');
+          if (data.delivery_notes) {
+            notesBox.style.display = 'block';
+            document.getElementById('modal-delivery-notes').textContent = data.delivery_notes;
+          } else {
+            notesBox.style.display = 'none';
+          }
+
+          modal.style.display = 'flex';
+        })
+        .catch(err => {
+          console.error(err);
+          alert('Failed to load order tracking details.');
+        });
+    });
+  });
+});
+</script>
+{% endblock %}

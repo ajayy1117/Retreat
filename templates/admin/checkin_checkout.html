@@ -1,0 +1,211 @@
+{% extends "admin/base_admin.html" %}
+
+{% block page_title %}Front Desk Operational Desk — Check-in &amp; Check-out{% endblock %}
+
+{% block content %}
+<!-- Summary Status Banner -->
+<div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 18px 24px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+  <div>
+    <h3 style="font-family: var(--font-heading); font-size: 22px; color: var(--color-forest); margin: 0 0 4px;">
+      Front Desk Room Management Desk
+    </h3>
+    <span style="font-size: 13px; color: var(--color-text-muted);">
+      Today's Operational Date: <strong class="date-value numeric-value" style="color: var(--color-forest);">{{ today_str }}</strong> &bull; 
+      Queue: <strong class="numeric-value" style="color: #047857;">{{ checkin_queue|length }} Check-in(s)</strong>, 
+      <strong class="numeric-value" style="color: #b45309;">{{ checkout_queue|length }} In-House Guest(s)</strong>
+    </span>
+  </div>
+
+  <div style="display: flex; gap: 10px;">
+    <a href="{{ url_for('admin_rooms') }}" class="admin-btn admin-btn-outline" style="font-size: 11px; height: 34px;">
+      View Room Fleet
+    </a>
+    <a href="{{ url_for('admin_dashboard') }}" class="admin-btn admin-btn-forest" style="font-size: 11px; height: 34px;">
+      Back to Dashboard
+    </a>
+  </div>
+</div>
+
+<!-- Section 1: Check-in Queue (Confirmed Bookings) -->
+<div class="admin-card" style="margin-bottom: 28px;">
+  <div class="admin-card-header" style="background: #fafaf8; border-bottom: 1px solid var(--color-border);">
+    <div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="width: 10px; height: 10px; border-radius: 50%; background: #047857;"></span>
+        <h3 class="admin-card-title" style="margin: 0; color: #047857; font-size: 16px;">
+          Arrivals &amp; Check-in Queue ({{ checkin_queue|length }})
+        </h3>
+      </div>
+      <span style="font-size: 12px; color: var(--color-text-muted);">Confirmed reservations awaiting guest arrival, room verification &amp; check-in timestamping</span>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Booking Code</th>
+          <th>Guest Details</th>
+          <th>Booked Category</th>
+          <th>Assigned Room</th>
+          <th>Check-in Date</th>
+          <th>Check-out Date</th>
+          <th>Guests</th>
+          <th>Payment Status</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in checkin_queue %}
+        <tr>
+          <td>
+            <a href="{{ url_for('admin_expenses', booking_id=b.id) }}" class="reference-code numeric-value" style="color: var(--color-forest); font-weight: 700; text-decoration: none;">
+              {{ b.booking_code }}
+            </a>
+          </td>
+          <td>
+            <div style="font-weight: 600; color: var(--color-forest);">{{ b.guest_name }}</div>
+            <div style="font-size: 11px; color: var(--color-text-muted);">{{ b.guest_phone }}</div>
+          </td>
+          <td>
+            <span style="font-weight: 500;">{{ b.room_name }}</span>
+          </td>
+          <td>
+            {% if b.assigned_room_number %}
+              <span class="badge" style="background: var(--color-forest-tint); color: var(--color-forest); font-size: 11px; font-weight: 700;">
+                Room {{ b.assigned_room_number }}
+              </span>
+            {% else %}
+              <span style="font-size: 11px; color: #d97706; font-style: italic; background: #fef3c7; padding: 2px 6px; border-radius: 3px;">
+                Pending Assignment
+              </span>
+            {% endif %}
+          </td>
+          <td class="date-value numeric-value" style="font-size: 12px; font-weight: 600;">
+            {{ b.check_in }}
+            {% if b.check_in == today_str %}
+              <span style="font-size: 10px; color: #047857; font-weight: 700; display: block;">TODAY</span>
+            {% endif %}
+          </td>
+          <td class="date-value numeric-value" style="font-size: 12px;">
+            {{ b.check_out }} ({{ b.total_nights }} nts)
+          </td>
+          <td class="numeric-value" style="font-size: 12px;">
+            {{ b.guests_adults }} Ad, {{ b.guests_children }} Ch
+          </td>
+          <td>
+            <span class="badge badge-{{ b.payment_status|lower|replace(' ', '') }}" style="font-size: 10px;">
+              {{ b.payment_status }}
+            </span>
+          </td>
+          <td style="text-align: right;">
+            <a href="{{ url_for('admin_checkin_flow', booking_id=b.id) }}" class="admin-btn admin-btn-forest" style="font-size: 11px; height: 30px; padding: 0 12px;">
+              Verify &amp; Check In &rarr;
+            </a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="9" style="text-align: center; padding: 32px; color: var(--color-text-muted);">
+            No confirmed reservations currently awaiting check-in.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Section 2: Check-out Queue (In-House Guests / Checked In Bookings) -->
+<div class="admin-card">
+  <div class="admin-card-header" style="background: #fafaf8; border-bottom: 1px solid var(--color-border);">
+    <div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="width: 10px; height: 10px; border-radius: 50%; background: #b45309;"></span>
+        <h3 class="admin-card-title" style="margin: 0; color: #b45309; font-size: 16px;">
+          In-House Guests &amp; Departure Queue ({{ checkout_queue|length }})
+        </h3>
+      </div>
+      <span style="font-size: 12px; color: var(--color-text-muted);">Currently occupied rooms, live folios, dining charges, and balance settlements</span>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Booking Ref</th>
+          <th>Guest Name</th>
+          <th>Assigned Room</th>
+          <th>Check-out Date</th>
+          <th>Total Billed Charges</th>
+          <th>Payments Cleared</th>
+          <th>Outstanding Balance</th>
+          <th>Status</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in checkout_queue %}
+        <tr>
+          <td>
+            <a href="{{ url_for('admin_expenses', booking_id=b.id) }}" class="reference-code numeric-value" style="color: var(--color-forest); font-weight: 700; text-decoration: none;">
+              {{ b.booking_code }}
+            </a>
+          </td>
+          <td>
+            <div style="font-weight: 600; color: var(--color-forest);">{{ b.guest_name }}</div>
+            <div style="font-size: 11px; color: var(--color-text-muted);">{{ b.room_name }}</div>
+          </td>
+          <td>
+            <span class="badge" style="background: #dbeafe; color: #1e40af; font-size: 12px; font-weight: 700;">
+              Room {{ b.assigned_room_number or '301' }}
+            </span>
+          </td>
+          <td class="date-value numeric-value" style="font-size: 12px; font-weight: 600;">
+            {{ b.check_out }}
+            {% if b.check_out == today_str %}
+              <span style="font-size: 10px; color: #b45309; font-weight: 700; display: block;">DEPARTING TODAY</span>
+            {% endif %}
+          </td>
+          <td>
+            <strong class="currency-value numeric-value" style="color: var(--color-forest);">
+              {{ b.financials.total_charges_formatted }}
+            </strong>
+          </td>
+          <td>
+            <span class="currency-value numeric-value" style="color: #166534; font-weight: 600;">
+              {{ b.financials.total_paid_formatted }}
+            </span>
+          </td>
+          <td>
+            {% if b.financials.outstanding_balance > 0 %}
+              <strong class="currency-value numeric-value" style="color: #b91c1c; font-size: 13px;">
+                {{ b.financials.outstanding_balance_formatted }}
+              </strong>
+            {% else %}
+              <span class="numeric-value" style="font-size: 11px; color: #166534; font-weight: 600;">✓ ₹0 (Paid)</span>
+            {% endif %}
+          </td>
+          <td>
+            <span class="badge badge-checkedin" style="font-size: 10px;">In-House</span>
+          </td>
+          <td style="text-align: right;">
+            <a href="{{ url_for('admin_checkout_flow', booking_id=b.id) }}" class="admin-btn admin-btn-gold" style="font-size: 11px; height: 30px; padding: 0 12px;">
+              Settle &amp; Check Out &rarr;
+            </a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="9" style="text-align: center; padding: 32px; color: var(--color-text-muted);">
+            No guests currently checked into the hotel.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+

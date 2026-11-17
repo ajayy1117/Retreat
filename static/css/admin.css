@@ -1,0 +1,637 @@
+/* RETREAT Hotel & Suites - Operations Dashboard Design Tokens & Component System
+ * Typography: Cormorant Garamond (editorial/headings) & DM Sans (interface/data/numbers)
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+
+:root {
+  /* Central Brand Colors */
+  --color-forest: #153F32;
+  --color-forest-dark: #0D2820;
+  --color-forest-hover: #1c5241;
+  --color-forest-tint: #EDF3F0;
+  --color-forest-muted: #385D51;
+  
+  --color-gold: #C9A15B;
+  --color-gold-light: #DFBA76;
+  --color-gold-dark: #A9833E;
+  --color-gold-soft: #F9F5EC;
+  --color-gold-border: rgba(201, 161, 91, 0.35);
+  
+  --color-ivory: #FAF8F3;
+  --color-white: #FFFFFF;
+  --color-surface-subtle: #FAFAF8;
+  --color-surface-hover: #F4F6F4;
+
+  --color-text-primary: #1A2420;
+  --color-text-secondary: #5F6E67;
+  --color-text-muted: #7E8D86;
+  --color-border: #E2E8E4;
+  --color-border-subtle: #EDECE6;
+
+  /* Typography Families */
+  --font-heading: 'Cormorant Garamond', Georgia, serif;
+  --font-interface: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Typography Scale */
+  --text-page-heading: 32px;
+  --text-section-heading: 22px;
+  --text-card-heading: 16px;
+  --text-body: 13px;
+  --text-table: 12px;
+  --text-label: 11px;
+  --text-btn: 12px;
+
+  /* Component Heights & Radii */
+  --admin-topbar-height: 64px;
+  --admin-input-height: 36px;
+  --admin-btn-height: 34px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-pill: 9999px;
+
+  /* Status Colors */
+  --status-confirmed: #0E6245;
+  --status-confirmed-bg: #EDF3F0;
+  --status-confirmed-border: #BBF7D0;
+
+  --status-checkedin: #1D4ED8;
+  --status-checkedin-bg: #DBEAFE;
+  --status-checkedin-border: #93C5FD;
+
+  --status-checkedout: #475569;
+  --status-checkedout-bg: #F1F5F9;
+  --status-checkedout-border: #CBD5E1;
+
+  --status-completed: #475569;
+  --status-completed-bg: #F1F5F9;
+  --status-completed-border: #CBD5E1;
+
+  --status-cancelled: #B91C1C;
+  --status-cancelled-bg: #FEE2E2;
+  --status-cancelled-border: #FCA5A5;
+
+  --status-unpaid: #B91C1C;
+  --status-unpaid-bg: #FEE2E2;
+  --status-unpaid-border: #FCA5A5;
+
+  --status-partiallypaid: #B45309;
+  --status-partiallypaid-bg: #FEF3C7;
+  --status-partiallypaid-border: #FDE047;
+
+  --status-paid: #15803D;
+  --status-paid-bg: #DCFCE7;
+  --status-paid-border: #86EFAC;
+
+  /* Elevational Shadows */
+  --shadow-xs: 0 1px 2px rgba(13, 40, 32, 0.04);
+  --shadow-sm: 0 1px 3px rgba(13, 40, 32, 0.06);
+  --shadow-md: 0 4px 12px rgba(13, 40, 32, 0.08);
+}
+
+/* ==========================================================================
+   1. GLOBAL NUMERIC TYPOGRAPHY ENFORCEMENT
+   Rule: DM Sans with tabular numerals for all numerical, monetary, date, and reference data
+   Never inherit Cormorant Garamond for any numerical values
+   ========================================================================== */
+.numeric-value,
+.currency-value,
+.reference-code,
+.date-value,
+.quantity-value,
+.financial-total,
+.ref-number,
+.tabular-nums,
+.kpi-value,
+.kpi-change,
+input[type="number"],
+input[type="date"] {
+  font-family: var(--font-interface) !important;
+  font-feature-settings: "tnum" 1, "cv05" 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.reference-code {
+  font-family: var(--font-interface) !important;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap !important;
+  display: inline-block;
+}
+
+.currency-value,
+.financial-total {
+  font-weight: 700;
+}
+
+/* Base Body Layout */
+body.admin-body {
+  font-family: var(--font-interface);
+  background-color: var(--color-surface-subtle);
+  color: var(--color-text-primary);
+  font-size: var(--text-body);
+  margin: 0;
+  display: flex;
+  min-height: 100vh;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ==========================================================================
+   2. ADMIN SIDEBAR SYSTEM
+   ========================================================================== */
+.admin-sidebar {
+  width: 250px;
+  background-color: var(--color-forest-dark);
+  color: #FAF8F3;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 100;
+  border-right: 1px solid rgba(201, 161, 91, 0.2);
+}
+
+.sidebar-header {
+  padding: 22px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.sidebar-brand-img {
+  height: 38px;
+  width: auto;
+  margin-bottom: 6px;
+}
+
+.sidebar-badge {
+  font-family: var(--font-interface);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+  font-weight: 600;
+}
+
+.sidebar-nav {
+  padding: 16px 12px;
+  flex-grow: 1;
+  list-style: none;
+  margin: 0;
+  overflow-y: auto;
+}
+
+.sidebar-item {
+  margin-bottom: 3px;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  color: rgba(250, 248, 243, 0.78);
+  font-family: var(--font-interface);
+  font-size: 12.5px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.sidebar-link svg {
+  color: var(--color-gold);
+  flex-shrink: 0;
+}
+
+.sidebar-link:hover {
+  background-color: var(--color-forest);
+  color: #FFFFFF;
+}
+
+.sidebar-link.active {
+  background-color: var(--color-forest);
+  color: #FFFFFF;
+  border-left: 3px solid var(--color-gold);
+}
+
+.sidebar-footer {
+  padding: 16px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-gold);
+  color: var(--color-forest-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.user-info .name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.user-info .role {
+  font-size: 10px;
+  color: var(--color-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ==========================================================================
+   3. MAIN CONTENT CONTAINER & TOPBAR
+   ========================================================================== */
+.admin-main {
+  margin-left: 250px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-topbar {
+  background: #FFFFFF;
+  height: var(--admin-topbar-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 90;
+}
+
+.topbar-title h1 {
+  font-family: var(--font-heading);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--color-forest);
+  margin: 0;
+  line-height: 1.1;
+}
+
+.topbar-title span {
+  font-family: var(--font-interface);
+  font-size: 11.5px;
+  color: var(--color-text-muted);
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-content {
+  padding: 24px 28px;
+  min-height: calc(100vh - var(--admin-topbar-height));
+}
+
+/* ==========================================================================
+   4. STANDARDIZED ACTION BUTTONS & FORM INPUTS
+   ========================================================================== */
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 14px;
+  height: var(--admin-btn-height);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-interface);
+  font-size: var(--text-btn);
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease-in-out;
+  white-space: nowrap;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+/* Primary Forest Action */
+.admin-btn-forest,
+.admin-btn-primary {
+  background: var(--color-forest);
+  color: #FFFFFF;
+  border-color: var(--color-forest);
+}
+
+.admin-btn-forest:hover,
+.admin-btn-primary:hover {
+  background: var(--color-forest-dark);
+  border-color: var(--color-forest-dark);
+  color: #FFFFFF;
+}
+
+/* Secondary Outline Action */
+.admin-btn-outline {
+  border-color: var(--color-border);
+  color: var(--color-forest);
+  background: #FFFFFF;
+}
+
+.admin-btn-outline:hover {
+  background: var(--color-forest-tint);
+  border-color: var(--color-forest-muted);
+  color: var(--color-forest);
+}
+
+/* Accent Gold Action */
+.admin-btn-gold {
+  background: var(--color-gold);
+  color: var(--color-forest-dark);
+  border-color: var(--color-gold-dark);
+}
+
+.admin-btn-gold:hover {
+  background: var(--color-gold-dark);
+  color: #FFFFFF;
+}
+
+/* Destructive Subtle Red Action */
+.admin-btn-danger {
+  background: #FEE2E2;
+  color: #991B1B;
+  border-color: #FCA5A5;
+}
+
+.admin-btn-danger:hover {
+  background: #FCA5A5;
+  color: #7F1D1D;
+}
+
+/* Compact Table Action Button */
+.admin-btn-xs {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 11px;
+}
+
+/* Standard Form Fields */
+.admin-input,
+input[type="text"].admin-input,
+input[type="number"].admin-input,
+input[type="date"].admin-input,
+select.admin-select {
+  height: var(--admin-input-height);
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: #FFFFFF;
+  font-family: var(--font-interface);
+  font-size: 12px;
+  color: var(--color-text-primary);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease;
+}
+
+.admin-input:focus,
+select.admin-select:focus {
+  border-color: var(--color-forest);
+  box-shadow: 0 0 0 2px rgba(21, 63, 50, 0.1);
+}
+
+.admin-field-label {
+  display: block;
+  font-family: var(--font-interface);
+  font-size: var(--text-label);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+}
+
+/* ==========================================================================
+   5. STANDARDIZED DATA TABLES
+   ========================================================================== */
+.admin-card {
+  background: #FFFFFF;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.admin-card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-card-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-section-heading);
+  font-weight: 600;
+  color: var(--color-forest);
+  margin: 0;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-family: var(--font-interface);
+}
+
+.admin-table th {
+  background: #FAFBFA;
+  padding: 11px 16px;
+  font-size: var(--text-label);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-secondary);
+  font-weight: 700;
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.admin-table td {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  font-size: var(--text-table);
+  vertical-align: middle;
+}
+
+.admin-table tbody tr:hover td {
+  background-color: var(--color-surface-hover);
+}
+
+/* Table Column Width Utilities */
+.col-reference { width: 160px; min-width: 150px; white-space: nowrap !important; }
+.col-guest { min-width: 220px; }
+.col-room { min-width: 180px; }
+.col-stay { min-width: 190px; }
+.col-guests { width: 150px; }
+.col-status { width: 120px; }
+.col-financial { width: 130px; text-align: right; }
+.col-actions { width: 170px; text-align: right; }
+
+/* ==========================================================================
+   6. STANDARDIZED STATUS BADGES
+   Consistent height (22px), padding (2px 8px), border-radius (4px), font-size (11px)
+   ========================================================================== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-interface);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+/* Booking Status Badges */
+.badge-confirmed { background: var(--status-confirmed-bg); color: var(--status-confirmed); border-color: var(--status-confirmed-border); }
+.badge-checkedin { background: var(--status-checkedin-bg); color: var(--status-checkedin); border-color: var(--status-checkedin-border); }
+.badge-checkedout { background: var(--status-checkedout-bg); color: var(--status-checkedout); border-color: var(--status-checkedout-border); }
+.badge-completed { background: var(--status-completed-bg); color: var(--status-completed); border-color: var(--status-completed-border); }
+.badge-cancelled { background: var(--status-cancelled-bg); color: var(--status-cancelled); border-color: var(--status-cancelled-border); }
+
+/* Payment Status Badges */
+.badge-unpaid { background: var(--status-unpaid-bg); color: var(--status-unpaid); border-color: var(--status-unpaid-border); }
+.badge-partiallypaid { background: var(--status-partiallypaid-bg); color: var(--status-partiallypaid); border-color: var(--status-partiallypaid-border); }
+.badge-paid { background: var(--status-paid-bg); color: var(--status-paid); border-color: var(--status-paid-border); }
+
+/* Food Order Status Badges */
+.badge-placed { background: #FEF9C3; color: #854D0E; border-color: #FEF08A; }
+.badge-preparing { background: #FEF3C7; color: #B45309; border-color: #FDE047; }
+.badge-ready { background: #E0E7FF; color: #3730A3; border-color: #C7D2FE; }
+.badge-out-for-delivery { background: #DBEAFE; color: #1E40AF; border-color: #93C5FD; }
+.badge-delivered { background: #DCFCE7; color: #166534; border-color: #86EFAC; }
+
+/* Operational Room Badges */
+.badge-available { background: #DCFCE7; color: #166534; border-color: #86EFAC; }
+.badge-occupied { background: #DBEAFE; color: #1E40AF; border-color: #93C5FD; }
+.badge-cleaning { background: #FEF9C3; color: #854D0E; border-color: #FDE047; }
+.badge-maintenance { background: #FEE2E2; color: #991B1B; border-color: #FCA5A5; }
+
+/* ==========================================================================
+   7. STANDARDIZED KPI CARDS
+   ========================================================================== */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.kpi-card {
+  background: #FFFFFF;
+  border-radius: var(--radius-sm);
+  padding: 18px 20px;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.kpi-title {
+  font-family: var(--font-interface);
+  font-size: var(--text-label);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-secondary);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.kpi-value {
+  font-family: var(--font-interface);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--color-forest);
+  margin: 4px 0 2px;
+}
+
+.kpi-change {
+  font-family: var(--font-interface);
+  font-size: 11px;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.kpi-icon-box {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   8. UNIFIED FILTER TOOLBAR
+   ========================================================================== */
+.admin-filter-toolbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  background: var(--color-surface-subtle);
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+.admin-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-filter-label {
+  font-size: var(--text-label);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Action Groups */
+.admin-action-group {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+}

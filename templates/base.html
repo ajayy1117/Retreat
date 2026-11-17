@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}RETREAT — Hotel & Suites{% endblock %}</title>
+  
+  <!-- Cormorant Garamond & DM Sans Typography Scale -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <!-- Header Navigation: 3 Distinct Sections (Brand / Navigation / Actions) -->
+  <header class="site-header">
+    <div class="container header-inner">
+      
+      <!-- Section 1: Brand / Logo & Descriptor -->
+      <div class="header-brand-section">
+        <a href="{{ url_for('home') }}" class="brand-link">
+          <img src="{{ url_for('static', filename='images/retreat_logo_light.png') }}" alt="RETREAT Logo" class="brand-logo-img">
+          <div class="brand-meta-wrapper">
+            <span class="brand-text-descriptor">Hotel & Suites</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Section 2: Main Navigation -->
+      <div class="header-nav-section" id="headerNavSection">
+        <nav>
+          <ul class="nav-menu">
+            <li class="nav-item">
+              <a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">Home</a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ url_for('rooms_catalog') }}" class="nav-link {% if request.endpoint in ['rooms_catalog', 'room_detail', 'booking_flow'] %}active{% endif %}">Rooms &amp; Suites</a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ url_for('my_bookings') }}" class="nav-link {% if request.endpoint in ['my_bookings', 'booking_details', 'booking_confirmation'] %}active{% endif %}">My Bookings</a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ url_for('guest_services') }}" class="nav-link {% if request.endpoint in ['guest_services', 'food_menu'] %}active{% endif %}">Guest Services</a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ url_for('experiences') }}" class="nav-link {% if request.endpoint == 'experiences' %}active{% endif %}">Amenities</a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ url_for('about') }}" class="nav-link {% if request.endpoint == 'about' %}active{% endif %}">About Us</a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ url_for('contact') }}" class="nav-link {% if request.endpoint == 'contact' %}active{% endif %}">Contact</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+
+      <!-- Section 3: Staff Portal & Customer Profile / Session Actions -->
+      <div class="header-actions-section">
+        {% if current_user %}
+          <!-- Logged in state: Profile & Logout -->
+          <a href="{{ url_for('profile') }}" class="btn btn-outline-light btn-header" title="Customer Profile">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <span>{{ current_user.full_name.split()[0] }}</span>
+          </a>
+          {% if current_user.role == 'admin' %}
+          <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-light btn-header" style="color: var(--color-gold); border-color: var(--color-gold);">
+            Staff Portal
+          </a>
+          {% endif %}
+          <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-header" style="padding: 0 10px;" title="Logout">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          </a>
+        {% else %}
+          <!-- Guest state: Sign In & Staff Portal -->
+          <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-header">
+            Sign In
+          </a>
+          <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-light btn-header">
+            Staff Portal
+          </a>
+        {% endif %}
+
+        <!-- Mobile Hamburger Toggle -->
+        <button id="mobileNavToggle" class="mobile-nav-toggle" aria-label="Toggle navigation menu" onclick="toggleMobileNav()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Flash Messages Banner -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="container" style="padding-top: calc(var(--header-height) + 14px);">
+        {% for category, msg in messages %}
+          <div style="padding: 12px 16px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; {% if category == 'error' %}background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;{% else %}background: var(--color-forest-tint); color: var(--color-forest); border: 1px solid #c3dcd0;{% endif %}">
+            <span>{{ msg }}</span>
+            <button onclick="this.parentElement.remove()" style="border: none; background: transparent; cursor: pointer; font-size: 16px; font-weight: bold; color: inherit;">&times;</button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Main Body Content -->
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <img src="{{ url_for('static', filename='images/retreat_logo_light.png') }}" alt="RETREAT Logo" style="height: 38px; width: auto; margin-bottom: 6px;">
+          <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.16em; color: var(--color-gold-light); display: block; font-weight: 600;">Hotel & Suites</span>
+          <p>A contemporary standard-to-premium hotel providing well-appointed rooms, fine hospitality, and reliable business and leisure amenities.</p>
+          <div style="display: flex; gap: 12px; color: var(--color-gold);">
+            <a href="#" aria-label="Instagram"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></a>
+            <a href="#" aria-label="Facebook"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></a>
+            <a href="#" aria-label="LinkedIn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg></a>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="footer-heading">Accommodations</h4>
+          <ul class="footer-links">
+            <li><a href="{{ url_for('rooms_catalog', category='Standard') }}">Comfort Room</a></li>
+            <li><a href="{{ url_for('rooms_catalog', category='Deluxe') }}">Canopy Deluxe Room</a></li>
+            <li><a href="{{ url_for('rooms_catalog', category='Executive Suite') }}">Executive Suite</a></li>
+            <li><a href="{{ url_for('rooms_catalog', category='Premium Suite') }}">Premium Family Suite</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-heading">Hotel Services</h4>
+          <ul class="footer-links">
+            <li><a href="{{ url_for('guest_services') }}">Guest Services &amp; Room Dining</a></li>
+            <li><a href="{{ url_for('food_menu') }}">24/7 In-Room Dining Menu</a></li>
+            <li><a href="{{ url_for('experiences') }}">Fitness Centre &amp; Amenities</a></li>
+            <li><a href="{{ url_for('my_bookings') }}">View My Reservations</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-heading">Quick Links</h4>
+          <ul class="footer-links">
+            <li><a href="{{ url_for('about') }}">About RETREAT</a></li>
+            <li><a href="{{ url_for('contact') }}">Contact & Directions</a></li>
+            <li><a href="#">Cancellation Policy</a></li>
+            <li><a href="#">Privacy Policy</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-heading">Hotel Location</h4>
+          <p style="font-size: 13px; color: rgba(250,248,243,0.7); line-height: 1.6; margin-bottom: 8px;">
+            Plot 42, Civil Lines Ring Road,<br>
+            Near City Centre, Jaipur 302006, India
+          </p>
+          <p style="font-size: 13px; color: var(--color-gold);">
+            reservations@retreathotels.in<br>
+            +91 (0141) 289-4000
+          </p>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>&copy; 2026 RETREAT Hotel & Suites. All Rights Reserved.</div>
+        <div>Where Every Stay Feels Extraordinary.</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast Notice -->
+  <div id="toast-notice" class="toast-notice">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--color-gold);"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+    <span id="toast-message">Notification text</span>
+  </div>
+
+  <!-- Global JavaScript & localStorage Sync -->
+  <script>
+    function showToast(message) {
+      const toast = document.getElementById('toast-notice');
+      const msg = document.getElementById('toast-message');
+      msg.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 4500);
+    }
+
+    // Client-side persistence cache for prototype sessions
+    (function syncLocalSession() {
+      {% if current_user %}
+        localStorage.setItem('retreat_user', JSON.stringify({
+          customerId: "{{ current_user.customer_id }}",
+          name: "{{ current_user.full_name }}",
+          email: "{{ current_user.email }}",
+          role: "{{ current_user.role }}"
+        }));
+      {% else %}
+        localStorage.removeItem('retreat_user');
+      {% endif %}
+    })();
+
+    // Mobile Navigation Drawer Toggle
+    function toggleMobileNav() {
+      const navSection = document.getElementById('headerNavSection');
+      navSection.classList.toggle('mobile-open');
+    }
+  </script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

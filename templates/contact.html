@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Contact & Location | RETREAT — Hotel & Suites{% endblock %}
+{% block content %}
+<section style="background: linear-gradient(rgba(8, 34, 25, 0.72), rgba(8, 34, 25, 0.82)), url('https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=2000&q=80') center/cover no-repeat; padding: 120px 0 60px; text-align: center; color: var(--warm-ivory);">
+  <div class="container">
+    <span class="hero-pretitle" style="justify-content: center; color: var(--champagne-gold);">GET IN TOUCH</span>
+    <h1 style="color: #ffffff; font-size: 42px; margin-bottom: 12px; font-family: var(--font-primary-heading);">Contact Hotel Desk</h1>
+    <p style="max-width: 620px; margin: 0 auto; color: rgba(252, 250, 246, 0.85); font-size: 15px;">
+      Have a question regarding corporate bookings, group reservations, or early check-in? Reach our front desk team.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 48px;">
+      <div>
+        <span class="section-subtitle">Front Desk Assistance</span>
+        <h2 style="font-family: var(--font-primary-heading); font-size: 30px; color: var(--forest-dark); margin-bottom: 16px;">We're Here to Help</h2>
+        <p style="color: var(--text-muted); font-size: 14px; line-height: 1.7; margin-bottom: 28px;">
+          Our guest reception is operational 24 hours a day to assist with room bookings, directions, and hotel services.
+        </p>
+
+        <div style="margin-bottom: 20px;">
+          <strong style="color: var(--forest-dark); display: block; font-size: 14px; margin-bottom: 2px;">Hotel Address:</strong>
+          <span style="color: var(--text-muted); font-size: 13px;">Plot 42, Civil Lines Ring Road, Near City Centre, Jaipur 302006, Rajasthan, India</span>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <strong style="color: var(--forest-dark); display: block; font-size: 14px; margin-bottom: 2px;">Telephone Contact:</strong>
+          <span style="color: var(--text-muted); font-size: 13px;">+91 (0141) 289-4000 / +91 98290 12345</span>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <strong style="color: var(--forest-dark); display: block; font-size: 14px; margin-bottom: 2px;">Direct Email:</strong>
+          <span style="color: var(--text-muted); font-size: 13px;">reservations@retreathotels.in</span>
+        </div>
+      </div>
+
+      <div style="background: #ffffff; padding: 32px; border-radius: var(--radius-md); border: 1px solid var(--ivory-border); box-shadow: var(--shadow-sm);">
+        <h3 style="font-family: var(--font-primary-heading); font-size: 24px; color: var(--forest-dark); margin-bottom: 16px;">Send Us an Inquiry</h3>
+        <form id="contact-form">
+          <div style="margin-bottom: 14px;">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="name" required placeholder="Your full name" style="width: 100%; height: var(--input-height); padding: 0 14px; border: 1px solid var(--ivory-border); border-radius: 4px; font-family: inherit; font-size: 13px;">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+            <div>
+              <label class="form-label">Email</label>
+              <input type="email" name="email" required placeholder="name@domain.com" style="width: 100%; height: var(--input-height); padding: 0 14px; border: 1px solid var(--ivory-border); border-radius: 4px; font-family: inherit; font-size: 13px;">
+            </div>
+            <div>
+              <label class="form-label">Phone</label>
+              <input type="tel" name="phone" placeholder="+91 98765 00000" style="width: 100%; height: var(--input-height); padding: 0 14px; border: 1px solid var(--ivory-border); border-radius: 4px; font-family: inherit; font-size: 13px;">
+            </div>
+          </div>
+          <div style="margin-bottom: 14px;">
+            <label class="form-label">Subject</label>
+            <input type="text" name="subject" placeholder="e.g. Group booking or Corporate corporate tie-up" style="width: 100%; height: var(--input-height); padding: 0 14px; border: 1px solid var(--ivory-border); border-radius: 4px; font-family: inherit; font-size: 13px;">
+          </div>
+          <div style="margin-bottom: 20px;">
+            <label class="form-label">Message</label>
+            <textarea name="message" rows="3" required placeholder="Please write your questions or booking dates..." style="width: 100%; padding: 10px 14px; border: 1px solid var(--ivory-border); border-radius: 4px; font-family: inherit; font-size: 13px;"></textarea>
+          </div>
+          <button type="submit" class="btn btn-gold" style="width: 100%;">Submit Inquiry</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('contact-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+  fetch('/contact', {
+    method: 'POST',
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    showToast(data.message);
+    this.reset();
+  });
+});
+</script>
+{% endblock %}

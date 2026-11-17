@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+
+{% block title %}Payments & Transactions — {{ booking.booking_code }} — RETREAT Hotel & Suites{% endblock %}
+
+{% block content %}
+<section style="padding-top: calc(var(--header-height) + 28px); padding-bottom: 80px; background: var(--color-ivory); min-height: 85vh;">
+  <div class="container" style="max-width: 1040px;">
+
+    <!-- Breadcrumb & Back -->
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; flex-wrap: wrap; gap: 12px;">
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-text-muted);">
+        <a href="{{ url_for('my_bookings') }}" style="color: var(--color-forest); text-decoration: none; font-weight: 500;">My Reservations</a>
+        <span>/</span>
+        <span style="color: var(--color-gold); font-weight: 600;">Folio #{{ booking.booking_code }}</span>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <a href="{{ url_for('customer_ledger', booking_id=booking.id) }}" class="btn btn-outline-forest" style="height: 36px; padding: 0 16px; font-size: 11px;">
+          View Expense Ledger
+        </a>
+        <a href="{{ url_for('food_menu', booking_id=booking.id) }}" class="btn btn-outline-forest" style="height: 36px; padding: 0 16px; font-size: 11px;">
+          Order Room Service
+        </a>
+        <a href="{{ url_for('checkout_billing', booking_id=booking.id) }}" class="btn btn-gold" style="height: 36px; padding: 0 16px; font-size: 11px;">
+          Proceed to Checkout
+        </a>
+      </div>
+    </div>
+
+    <!-- Header Card -->
+    <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 24px; margin-bottom: 24px; box-shadow: var(--shadow-sm);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+        <div>
+          <span class="section-subtitle">Financial Account Management</span>
+          <h1 style="font-family: var(--font-heading); font-size: 28px; color: var(--color-forest); margin: 4px 0 6px;">
+            Booking Payment & Settlement
+          </h1>
+          <p style="font-size: 13px; color: var(--color-text-muted); margin: 0;">
+            Reservation: <strong>{{ booking.booking_code }}</strong> &bull; Guest: <strong>{{ booking.guest_name }}</strong> &bull; Room: <strong>{{ booking.room_name }}</strong>
+          </p>
+        </div>
+        <div style="text-align: right;">
+          <span class="badge badge-{{ financials.payment_status|lower|replace(' ', '') }}" style="font-size: 13px; padding: 6px 14px; text-transform: uppercase; letter-spacing: 0.5px;">
+            {{ financials.payment_status }}
+          </span>
+          <div style="font-size: 11px; color: var(--color-text-muted); margin-top: 6px;">
+            Stay: {{ booking.check_in }} &rarr; {{ booking.check_out }} ({{ booking.total_nights }} nights)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Financial Summary Cards (3-column KPI) -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; margin-bottom: 28px;">
+      
+      <!-- Total Charges -->
+      <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 20px; box-shadow: var(--shadow-sm);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-family: var(--font-interface); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted);">Total Charges</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-forest)" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+        </div>
+        <div style="font-family: var(--font-interface); font-size: 20px; color: var(--color-forest); font-weight: 600; font-feature-settings: 'tnum' 1;">
+          {{ financials.total_charges_formatted }}
+        </div>
+        <div style="font-family: var(--font-interface); font-size: 11px; color: var(--color-text-muted); margin-top: 6px;">
+          Includes room tariff, meal plan &amp; verified room services
+        </div>
+      </div>
+
+      <!-- Amount Paid -->
+      <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 20px; box-shadow: var(--shadow-sm);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-family: var(--font-interface); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: #166534;">Amount Paid</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <div style="font-family: var(--font-interface); font-size: 20px; color: #166534; font-weight: 600; font-feature-settings: 'tnum' 1;">
+          {{ financials.total_paid_formatted }}
+        </div>
+        <div style="font-family: var(--font-interface); font-size: 11px; color: var(--color-text-muted); margin-top: 6px;">
+          {{ payments|length }} confirmed transaction(s) recorded
+        </div>
+      </div>
+
+      <!-- Remaining Balance -->
+      <div style="background: {% if financials.outstanding_balance > 0 %}#fffbeb{% else %}#f0fdf4{% endif %}; border-radius: var(--radius-sm); border: 1px solid {% if financials.outstanding_balance > 0 %}#fef08a{% else %}#bbf7d0{% endif %}; padding: 20px; box-shadow: var(--shadow-sm);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-family: var(--font-interface); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: {% if financials.outstanding_balance > 0 %}#854d0e{% else %}#166534{% endif %};">Outstanding Balance</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{% if financials.outstanding_balance > 0 %}#854d0e{% else %}#166534{% endif %}" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        </div>
+        <div style="font-family: var(--font-interface); font-size: 20px; color: {% if financials.outstanding_balance > 0 %}#991b1b{% else %}#166534{% endif %}; font-weight: 700; font-feature-settings: 'tnum' 1;">
+          {{ financials.outstanding_balance_formatted }}
+        </div>
+        <div style="font-family: var(--font-interface); font-size: 11px; color: var(--color-text-muted); margin-top: 6px;">
+          {% if financials.outstanding_balance > 0 %}
+            Settlement required before checkout completion
+          {% else %}
+            Full folio settled in full. Ready for express checkout.
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Main Payment Form & History Grid -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
+      
+      <!-- Payment Submission Box -->
+      <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 26px; box-shadow: var(--shadow-sm);">
+        <h2 style="font-family: var(--font-heading); font-size: 22px; color: var(--color-forest); margin: 0 0 8px;">
+          Submit Simulated Payment
+        </h2>
+        <p style="font-size: 13px; color: var(--color-text-muted); margin-bottom: 20px;">
+          Choose whether to settle the entire remaining amount or make a flexible partial payment towards your reservation.
+        </p>
+
+        {% if financials.outstanding_balance <= 0 %}
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius-sm); padding: 20px; text-align: center;">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2" style="margin-bottom: 8px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <h4 style="font-family: var(--font-heading); font-size: 18px; color: #166534; margin: 0 0 6px;">Folio Fully Settled</h4>
+            <p style="font-size: 13px; color: #166534; margin: 0 0 16px;">There is no remaining balance due for this booking.</p>
+            <a href="{{ url_for('checkout_billing', booking_id=booking.id) }}" class="btn btn-forest" style="font-size: 12px; height: 38px;">
+              View Final Checkout Folio
+            </a>
+          </div>
+        {% else %}
+          <form method="POST" action="{{ url_for('booking_payments', booking_id=booking.id) }}" id="paymentForm">
+            
+            <!-- Payment Type Selection -->
+            <label style="display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted); margin-bottom: 8px;">
+              Select Payment Option
+            </label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px;">
+              <label style="border: 2px solid var(--color-border); border-radius: var(--radius-sm); padding: 12px; cursor: pointer; display: flex; flex-direction: column; gap: 4px; transition: all 0.2s;" id="labelFull">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <input type="radio" name="payment_type" value="full" checked onchange="togglePaymentType('full')">
+                  <strong style="font-size: 13px; color: var(--color-forest);">Full Payment</strong>
+                </div>
+                <span style="font-size: 12px; color: var(--color-text-muted); padding-left: 22px;">Pay {{ financials.outstanding_balance_formatted }}</span>
+              </label>
+
+              <label style="border: 2px solid var(--color-border); border-radius: var(--radius-sm); padding: 12px; cursor: pointer; display: flex; flex-direction: column; gap: 4px; transition: all 0.2s;" id="labelPartial">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <input type="radio" name="payment_type" value="partial" onchange="togglePaymentType('partial')">
+                  <strong style="font-size: 13px; color: var(--color-forest);">Partial Payment</strong>
+                </div>
+                <span style="font-size: 12px; color: var(--color-text-muted); padding-left: 22px;">Custom partial amount</span>
+              </label>
+            </div>
+
+            <!-- Custom Amount Input (Hidden for Full) -->
+            <div id="partialAmountBox" style="display: none; margin-bottom: 18px;">
+              <label for="amount" style="display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted); margin-bottom: 6px;">
+                Partial Amount (₹)
+              </label>
+              <div style="position: relative;">
+                <span style="position: absolute; left: 14px; top: 12px; color: var(--color-text-muted); font-size: 14px; font-weight: 600;">₹</span>
+                <input type="number" step="0.01" min="1" max="{{ financials.outstanding_balance }}" id="amount" name="amount" placeholder="e.g. 5000" style="width: 100%; height: 42px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 0 14px 0 32px; font-size: 14px; font-family: var(--font-body); font-weight: 600;">
+              </div>
+              <small style="font-size: 11px; color: var(--color-text-muted); display: block; margin-top: 4px;">
+                Must be greater than ₹0 and not exceed balance of {{ financials.outstanding_balance_formatted }}.
+              </small>
+            </div>
+
+            <!-- Payment Method -->
+            <div style="margin-bottom: 18px;">
+              <label for="payment_method" style="display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted); margin-bottom: 6px;">
+                Payment Method (Simulated)
+              </label>
+              <select name="payment_method" id="payment_method" style="width: 100%; height: 42px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 0 12px; font-size: 13px; font-family: var(--font-body); background: #ffffff;">
+                <option value="UPI">UPI (Google Pay, PhonePe, Paytm)</option>
+                <option value="Credit/Debit Card">Credit / Debit Card (Visa, Mastercard, RuPay)</option>
+                <option value="Net Banking">Net Banking (HDFC, ICICI, SBI, Axis)</option>
+                <option value="Cash at Front Desk">Cash at Front Desk</option>
+                <option value="Bank Transfer">Direct Bank Transfer</option>
+              </select>
+            </div>
+
+            <!-- Notes / Remarks -->
+            <div style="margin-bottom: 22px;">
+              <label for="notes" style="display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted); margin-bottom: 6px;">
+                Transaction Notes (Optional)
+              </label>
+              <input type="text" name="notes" id="notes" placeholder="e.g., Paid via GPay or Card ending in 4022" style="width: 100%; height: 40px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 0 12px; font-size: 13px; font-family: var(--font-body);">
+            </div>
+
+            <!-- Action Buttons -->
+            <button type="submit" class="btn btn-gold" style="width: 100%; height: 44px; font-size: 13px; font-weight: 600; letter-spacing: 0.5px;">
+              Confirm Simulated Payment
+            </button>
+            <div style="text-align: center; margin-top: 10px; font-size: 11px; color: var(--color-text-muted);">
+              Secure demonstration sandbox &bull; Instant balance deduction
+            </div>
+          </form>
+        {% endif %}
+
+      </div>
+
+      <!-- Payment History Ledger -->
+      <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 26px; box-shadow: var(--shadow-sm);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h2 style="font-family: var(--font-heading); font-size: 22px; color: var(--color-forest); margin: 0;">
+            Payment History
+          </h2>
+          <span style="font-size: 12px; color: var(--color-text-muted); font-weight: 500;">
+            {{ payments|length }} record(s)
+          </span>
+        </div>
+
+        {% if payments %}
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            {% for p in payments %}
+              <div style="border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 14px; background: #fafaf8; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+                <div>
+                  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                    <span style="font-family: var(--font-heading); font-size: 15px; font-weight: 700; color: var(--color-forest);">
+                      {{ p.transaction_ref }}
+                    </span>
+                    <span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #dcfce7; color: #166534; font-weight: 600;">
+                      {{ p.transaction_status }}
+                    </span>
+                  </div>
+                  <div style="font-size: 12px; color: var(--color-text-secondary); margin-bottom: 2px;">
+                    Method: <strong>{{ p.payment_method }}</strong>
+                  </div>
+                  <div style="font-size: 11px; color: var(--color-text-muted);">
+                    Date: {{ p.transaction_date }}
+                  </div>
+                  {% if p.notes %}
+                    <div style="font-size: 11px; color: var(--color-forest-muted); margin-top: 4px; font-style: italic;">
+                      &ldquo;{{ p.notes }}&rdquo;
+                    </div>
+                  {% endif %}
+                </div>
+
+                <div style="text-align: right;">
+                  <div style="font-family: var(--font-body); font-size: 16px; font-weight: 700; color: #166534;">
+                    +{{ p.amount|currency }}
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div style="text-align: center; padding: 40px 16px; background: #fafaf8; border-radius: var(--radius-sm); border: 1px dashed var(--color-border);">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="1.5" style="margin-bottom: 8px;"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+            <div style="font-size: 13px; color: var(--color-text-muted);">No payments recorded yet for this reservation.</div>
+          </div>
+        {% endif %}
+
+        <!-- Quick Links Box -->
+        <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
+          <span style="color: var(--color-text-muted);">Need assistance?</span>
+          <a href="{{ url_for('contact') }}" style="color: var(--color-forest); font-weight: 600; text-decoration: none;">Contact Front Desk</a>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<script>
+function togglePaymentType(type) {
+  var partialBox = document.getElementById('partialAmountBox');
+  var amountInput = document.getElementById('amount');
+  var labelFull = document.getElementById('labelFull');
+  var labelPartial = document.getElementById('labelPartial');
+
+  if (type === 'partial') {
+    partialBox.style.display = 'block';
+    amountInput.required = true;
+    labelPartial.style.borderColor = 'var(--color-gold)';
+    labelPartial.style.background = 'var(--color-gold-soft)';
+    labelFull.style.borderColor = 'var(--color-border)';
+    labelFull.style.background = 'transparent';
+  } else {
+    partialBox.style.display = 'none';
+    amountInput.required = false;
+    labelFull.style.borderColor = 'var(--color-gold)';
+    labelFull.style.background = 'var(--color-gold-soft)';
+    labelPartial.style.borderColor = 'var(--color-border)';
+    labelPartial.style.background = 'transparent';
+  }
+}
+// Set initial styling
+togglePaymentType('full');
+</script>
+{% endblock %}
+

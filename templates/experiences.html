@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Guest Amenities | RETREAT — Hotel & Suites{% endblock %}
+{% block content %}
+<section style="background: linear-gradient(rgba(8, 34, 25, 0.72), rgba(8, 34, 25, 0.82)), url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=2000&q=80') center/cover no-repeat; padding: 120px 0 60px; text-align: center; color: var(--warm-ivory);">
+  <div class="container">
+    <span class="hero-pretitle" style="justify-content: center; color: var(--champagne-gold);">FACILITIES & COMFORT</span>
+    <h1 style="color: #ffffff; font-size: 42px; margin-bottom: 12px; font-family: var(--font-primary-heading);">Hotel Amenities & Services</h1>
+    <p style="max-width: 620px; margin: 0 auto; color: rgba(252, 250, 246, 0.85); font-size: 15px;">
+      Practical amenities designed to keep you rested, energized, and connected during your stay at RETREAT Hotel & Suites.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px;">
+      <div class="room-card">
+        <div class="room-image-wrap" style="height: 200px;">
+          <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80" alt="Fitness Centre">
+        </div>
+        <div class="room-body">
+          <span class="room-category">WELLNESS</span>
+          <h3 class="room-title" style="font-size: 22px;">Modern Fitness Centre</h3>
+          <p class="room-tagline" style="font-size: 14px;">Equipped with treadmills, elliptical trainers, free weights, and stretching mats for your daily morning routine.</p>
+          <div class="room-footer" style="padding-top: 10px;">
+            <span style="font-size: 12px; color: var(--text-muted);">6:00 AM – 10:00 PM</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="room-card">
+        <div class="room-image-wrap" style="height: 200px;">
+          <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80" alt="Conference Room">
+        </div>
+        <div class="room-body">
+          <span class="room-category">BUSINESS</span>
+          <h3 class="room-title" style="font-size: 22px;">Meeting & Board Room</h3>
+          <p class="room-tagline" style="font-size: 14px;">High-speed internet, projector display, and comfortable seating for up to 16 people. Perfect for client presentations.</p>
+          <div class="room-footer" style="padding-top: 10px;">
+            <a href="{{ url_for('contact') }}" class="link-arrow">Book Room</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="room-card">
+        <div class="room-image-wrap" style="height: 200px;">
+          <img src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=800&q=80" alt="Rooftop Terrace">
+        </div>
+        <div class="room-body">
+          <span class="room-category">LEISURE</span>
+          <h3 class="room-title" style="font-size: 22px;">Open-Air Rooftop Terrace</h3>
+          <p class="room-tagline" style="font-size: 14px;">A serene open terrace overlooking the city skyline, great for evening relaxation, fresh air, and light refreshments.</p>
+          <div class="room-footer" style="padding-top: 10px;">
+            <span style="font-size: 12px; color: var(--text-muted);">5:00 PM – 11:00 PM</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

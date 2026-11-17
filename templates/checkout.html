@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout & Final Bill — {{ booking.booking_code }} — RETREAT Hotel & Suites{% endblock %}
+
+{% block content %}
+<section style="padding-top: calc(var(--header-height) + 28px); padding-bottom: 80px; background: var(--color-ivory); min-height: 85vh;">
+  <div class="container" style="max-width: 980px;">
+
+    <!-- Top Action Breadcrumb -->
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; flex-wrap: wrap; gap: 12px;">
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-text-muted);">
+        <a href="{{ url_for('my_bookings') }}" style="color: var(--color-forest); text-decoration: none; font-weight: 500;">My Reservations</a>
+        <span>/</span>
+        <span style="color: var(--color-gold); font-weight: 600;">Checkout &amp; Folio #{{ booking.booking_code }}</span>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <a href="{{ url_for('customer_ledger', booking_id=booking.id) }}" class="btn btn-outline-forest" style="height: 36px; padding: 0 16px; font-size: 11px;">
+          View Full Ledger
+        </a>
+        <a href="{{ url_for('booking_payments', booking_id=booking.id) }}" class="btn btn-outline-forest" style="height: 36px; padding: 0 16px; font-size: 11px;">
+          Payment History
+        </a>
+      </div>
+    </div>
+
+    <!-- Outstanding Balance Warning (if > 0) -->
+    {% if financials.outstanding_balance > 0 %}
+      <div style="background: #fffbeb; border: 1px solid #fef08a; border-radius: var(--radius-sm); padding: 18px 24px; margin-bottom: 24px; display: flex; align-items: flex-start; gap: 14px; box-shadow: var(--shadow-sm);">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#854d0e" stroke-width="2" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <div>
+          <h4 style="font-family: var(--font-heading); font-size: 18px; color: #854d0e; margin: 0 0 4px;">Outstanding Balance Requires Settlement</h4>
+          <p style="font-size: 13px; color: #713f12; margin: 0; line-height: 1.5;">
+            An unsettled balance of <strong>{{ financials.outstanding_balance_formatted }}</strong> remains on your room folio. Hotel policy requires full folio settlement prior to completing check-out and generating your tax invoice.
+          </p>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Pending Room Service Orders Notice -->
+    {% if pending_orders %}
+      <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-sm); padding: 16px 20px; margin-bottom: 24px; font-size: 13px; color: #1e40af;">
+        <strong>Notice:</strong> You have {{ pending_orders|length }} active room service order(s) currently being prepared. Once delivered, they will be finalized onto your ledger.
+      </div>
+    {% endif %}
+
+    <!-- Folio & Checkout Bill Container -->
+    <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 32px; box-shadow: var(--shadow-md); margin-bottom: 24px;">
+      
+      <!-- Hotel & Invoice Header -->
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--color-border); padding-bottom: 24px; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+        <div>
+          <img src="{{ url_for('static', filename='images/retreat_logo_light.png') }}" alt="RETREAT Logo" style="height: 48px; object-fit: contain; margin-bottom: 6px;">
+          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--color-gold); font-weight: 600;">Hotel &amp; Suites</div>
+          <div style="font-size: 12px; color: var(--color-text-muted); margin-top: 4px;">123 Seaside Boulevard, Goa, India &bull; reservations@retreathotels.in</div>
+        </div>
+        <div style="text-align: right;">
+          <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--color-text-muted); display: block;">Checkout Billing Statement</span>
+          <div style="font-family: var(--font-heading); font-size: 26px; color: var(--color-forest); font-weight: 700; margin: 2px 0;">
+            Folio #{{ booking.booking_code }}
+          </div>
+          <div style="font-size: 12px; color: var(--color-text-muted);">
+            Status: <span class="badge badge-{{ booking.status|lower|replace(' ', '') }}">{{ booking.status }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Guest & Stay Meta Grid -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; background: #fafaf8; border-radius: var(--radius-sm); padding: 18px; margin-bottom: 28px; border: 1px solid var(--color-border);">
+        <div>
+          <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--color-text-muted); display: block;">Guest Details</span>
+          <strong style="font-size: 14px; color: var(--color-forest);">{{ booking.guest_name }}</strong>
+          <div style="font-size: 12px; color: var(--color-text-muted);">{{ booking.guest_email }}</div>
+          <div style="font-size: 12px; color: var(--color-text-muted);">{{ booking.guest_phone }}</div>
+        </div>
+
+        <div>
+          <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--color-text-muted); display: block;">Accommodation</span>
+          <strong style="font-size: 14px; color: var(--color-forest);">{{ booking.room_name }}</strong>
+          <div style="font-size: 12px; color: var(--color-text-muted);">{{ booking.rooms_count or 1 }} Room(s) &bull; {{ booking.bed_type or 'King Bed' }}</div>
+          <div style="font-size: 12px; color: var(--color-text-muted);">Occupancy: {{ booking.guests_adults }} Adults, {{ booking.guests_children }} Children</div>
+        </div>
+
+        <div>
+          <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--color-text-muted); display: block;">Duration of Stay</span>
+          <strong style="font-size: 14px; color: var(--color-forest);">{{ booking.check_in }} &rarr; {{ booking.check_out }}</strong>
+          <div style="font-size: 12px; color: var(--color-text-muted);">Total: {{ booking.total_nights }} Night(s)</div>
+          <div style="font-size: 12px; color: var(--color-text-muted);">Meal Plan: {{ booking.meal_plan or 'Room Only' }}</div>
+        </div>
+      </div>
+
+      <!-- Itemized Ledger Table -->
+      <div style="margin-bottom: 28px;">
+        <h3 style="font-family: var(--font-heading); font-size: 20px; color: var(--color-forest); margin-bottom: 12px;">
+          Finalized Charges Breakdown
+        </h3>
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+          <thead>
+            <tr style="border-bottom: 2px solid var(--color-border); text-align: left; color: var(--color-forest);">
+              <th style="padding: 10px 0;">Charge Description</th>
+              <th style="padding: 10px; text-align: center;">Category</th>
+              <th style="padding: 10px; text-align: center;">Qty</th>
+              <th style="padding: 10px; text-align: right;">Unit Price</th>
+              <th style="padding: 10px 0; text-align: right;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for exp in expenses %}
+              <tr style="border-bottom: 1px solid var(--color-border);">
+                <td style="padding: 12px 0;">
+                  <strong style="color: var(--color-forest);">{{ exp.description }}</strong>
+                  <div class="reference-code numeric-value" style="font-size: 11px; color: var(--color-text-muted);">{{ exp.expense_ref }}</div>
+                </td>
+                <td style="padding: 12px; text-align: center;">
+                  <span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #f1f5f9; color: #475569; font-weight: 600;">
+                    {{ exp.category }}
+                  </span>
+                </td>
+                <td style="padding: 12px; text-align: center; color: var(--color-text-secondary);">
+                  {{ exp.quantity }}
+                </td>
+                <td style="padding: 12px; text-align: right; color: var(--color-text-secondary);">
+                  {{ exp.unit_price|currency }}
+                </td>
+                <td style="padding: 12px 0; text-align: right; font-weight: 600; color: var(--color-forest);">
+                  {{ exp.total_amount|currency }}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Financial Reconciliation Summary -->
+      <div style="display: flex; justify-content: flex-end; margin-bottom: 32px;">
+        <div style="width: 100%; max-width: 380px; background: #fafaf8; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 18px;">
+          
+          <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px;">
+            <span style="color: var(--color-text-muted);">Total Folio Charges:</span>
+            <strong style="color: var(--color-forest);">{{ financials.total_charges_formatted }}</strong>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px;">
+            <span style="color: #166534;">Total Payments Credited:</span>
+            <strong style="color: #166534;">-{{ financials.total_paid_formatted }}</strong>
+          </div>
+
+          <div style="border-top: 2px solid var(--color-border); padding-top: 10px; margin-top: 10px; display: flex; justify-content: space-between; align-items: baseline;">
+            <span style="font-size: 14px; font-weight: 700; color: var(--color-forest);">Outstanding Balance:</span>
+            <span style="font-size: 20px; font-weight: 700; color: {% if financials.outstanding_balance > 0 %}#991b1b{% else %}#166534{% endif %}; font-family: var(--font-interface); font-feature-settings: 'tnum' 1;">
+              {{ financials.outstanding_balance_formatted }}
+            </span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Settlement & Final Checkout Trigger Form -->
+      <div style="border-top: 2px solid var(--color-border); padding-top: 24px;">
+        {% if financials.outstanding_balance > 0 %}
+          <div style="background: #ffffff; border: 1px solid var(--color-gold); border-radius: var(--radius-sm); padding: 22px;">
+            <h4 style="font-family: var(--font-heading); font-size: 20px; color: var(--color-forest); margin: 0 0 6px;">
+              Settle Outstanding Balance
+            </h4>
+            <p style="font-size: 13px; color: var(--color-text-muted); margin-bottom: 16px;">
+              Pay remaining amount of <strong>{{ financials.outstanding_balance_formatted }}</strong> to complete hotel checkout.
+            </p>
+
+            <form method="POST" action="{{ url_for('checkout_billing', booking_id=booking.id) }}" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+              <input type="hidden" name="action" value="pay_checkout">
+              <div style="flex-grow: 1; min-width: 220px;">
+                <select name="payment_method" style="width: 100%; height: 42px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); padding: 0 12px; font-size: 13px; background: #fff;">
+                  <option value="Credit/Debit Card">Credit / Debit Card</option>
+                  <option value="UPI">UPI Instant Settlement</option>
+                  <option value="Cash at Front Desk">Cash Settlement at Front Desk</option>
+                  <option value="Net Banking">Net Banking</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-gold" style="height: 42px; padding: 0 24px; font-size: 13px; font-weight: 600;">
+                Pay {{ financials.outstanding_balance_formatted }} &amp; Settle
+              </button>
+            </form>
+          </div>
+        {% else %}
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px; color: #166534; font-weight: 600; font-size: 15px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                Folio Settled in Full (₹0.00 Balance)
+              </div>
+              <div style="font-size: 12px; color: var(--color-text-muted); margin-top: 2px;">
+                All accommodation and incidental charges have been resolved.
+              </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('checkout_billing', booking_id=booking.id) }}" onsubmit="return confirm('Complete checkout for {{ booking.guest_name }}? This will mark the stay as Checked Out and generate the final tax invoice.');">
+              <input type="hidden" name="action" value="complete_checkout">
+              <button type="submit" class="btn btn-forest" style="height: 46px; padding: 0 28px; font-size: 13px; font-weight: 600; letter-spacing: 0.5px;">
+                Complete Check-out &amp; Generate Invoice
+              </button>
+            </form>
+          </div>
+        {% endif %}
+      </div>
+
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+
