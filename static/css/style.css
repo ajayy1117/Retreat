@@ -114,6 +114,9 @@
 html {
   scroll-behavior: smooth;
   font-size: 17.6px;
+  zoom: 1.1;
+  -moz-transform: scale(1.1);
+  -moz-transform-origin: 0 0;
 }
 
 body {
